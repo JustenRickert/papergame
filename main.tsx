@@ -112,10 +112,21 @@ class Circle implements Thing {
     }
     public turnToPosition(pos: Vector): void {
         if (Math.abs(Vector.angleBetween(this.vel, Vector.minus(pos, this.pos))) > .07) {
-            this.turn(this.turnRate * Vector.directionTo(
-                this.vel,
-                Vector.minus(pos, this.pos)));
+            this.turn(this.turnRate
+                      * Vector.directionTo(this.vel, Vector.minus(pos, this.pos)));
         }
+    }
+    public setVelocity(vel: Vector): void {
+        this.vel = new Vector(vel.x, vel.y)
+    }
+    public addVelocity(vel: Vector): void {
+        this.vel = new Vector(this.vel.x + vel.x, this.vel.y + vel.y)
+    }
+    public moveToPosition(pos: Vector): void {
+        if (Vector.dist(this.pos, pos) > this.radius / 3) {
+            red.moveForwardByVel();
+        }
+        red.turnToPosition(pos);
     }
     public draw(): void {
         // Draw the Circle
@@ -146,20 +157,6 @@ class Circle implements Thing {
         CNTX.fillStyle = this.bandColor;
         CNTX.fill();
         CNTX.closePath();
-    }
-    public setVelocity(vel: Vector): void {
-        this.vel = new Vector(vel.x, vel.y)
-    }
-    public addVelocity(vel: Vector): void {
-        this.vel = new Vector(this.vel.x + vel.x, this.vel.y + vel.y)
-    }
-    public moveToPosition(pos: Vector): void {
-        if (Vector.dist(this.pos, pos) > this.radius / 3) {
-            red.moveForwardByVel();
-        }
-        if (Vector.angleBetween(this.vel, Vector.minus(pos, this.pos)) < 0.60) {
-            red.turnToPosition(pos);
-        }
     }
 }
 

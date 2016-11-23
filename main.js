@@ -101,8 +101,21 @@ var Circle = (function () {
     };
     Circle.prototype.turnToPosition = function (pos) {
         if (Math.abs(Vector.angleBetween(this.vel, Vector.minus(pos, this.pos))) > .07) {
-            this.turn(this.turnRate * Vector.directionTo(this.vel, Vector.minus(pos, this.pos)));
+            this.turn(this.turnRate
+                * Vector.directionTo(this.vel, Vector.minus(pos, this.pos)));
         }
+    };
+    Circle.prototype.setVelocity = function (vel) {
+        this.vel = new Vector(vel.x, vel.y);
+    };
+    Circle.prototype.addVelocity = function (vel) {
+        this.vel = new Vector(this.vel.x + vel.x, this.vel.y + vel.y);
+    };
+    Circle.prototype.moveToPosition = function (pos) {
+        if (Vector.dist(this.pos, pos) > this.radius / 3) {
+            red.moveForwardByVel();
+        }
+        red.turnToPosition(pos);
     };
     Circle.prototype.draw = function () {
         // Draw the Circle
@@ -128,20 +141,6 @@ var Circle = (function () {
         CNTX.fill();
         CNTX.closePath();
     };
-    Circle.prototype.setVelocity = function (vel) {
-        this.vel = new Vector(vel.x, vel.y);
-    };
-    Circle.prototype.addVelocity = function (vel) {
-        this.vel = new Vector(this.vel.x + vel.x, this.vel.y + vel.y);
-    };
-    Circle.prototype.moveToPosition = function (pos) {
-        red.turnToPosition(pos);
-        if ((Vector.angleBetween(this.vel, Vector.minus(pos, this.pos)) < 0.75)) {
-            if (Vector.dist(this.pos, pos) > this.radius / 3) {
-                red.moveForwardByVel();
-            }
-        }
-    };
     return Circle;
 }());
 // Blue is the good guys, but maybe add user changeable colors or something.
@@ -153,6 +152,13 @@ var BlueCircle = (function (_super) {
     }
     return BlueCircle;
 }(Circle));
+var State = (function () {
+    function State() {
+        this.movement = true;
+        this.turn = true;
+    }
+    return State;
+}());
 // Red is the bad guys! Boo on them. They are a separate class because they are
 // going to have separate functions from the blue guys.
 var RedCircle = (function (_super) {
@@ -160,6 +166,7 @@ var RedCircle = (function (_super) {
     function RedCircle() {
         _super.call(this, 20, new Vector(200, 300));
         this.color = "Red";
+        this.state = new State();
     }
     return RedCircle;
 }(Circle));
