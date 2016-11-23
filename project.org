@@ -1,0 +1,13 @@
+
+* Idea
+The idea is to come up with a really great browser game written in Typescript.
+Thus far the game contains:
+- [X] Circles that can move around on the page
+
+* Plan
+I am hoping to have it so that there can be two sides, each starting on the
+opposing side of the map, that will have attacking units. Thus I will need to
+implement
+- [ ] Friendly units
+- [ ] Enemy units
+- [ ] A dialog that allows friendly units and enemy units to interact.
