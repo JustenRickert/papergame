@@ -113,9 +113,9 @@ var Circle = (function () {
     };
     Circle.prototype.moveToPosition = function (pos) {
         if (Vector.dist(this.pos, pos) > this.radius / 3) {
-            red.moveForwardByVel();
+            this.moveForwardByVel();
         }
-        red.turnToPosition(pos);
+        this.turnToPosition(pos);
     };
     Circle.prototype.draw = function () {
         // Draw the Circle
@@ -150,6 +150,9 @@ var BlueCircle = (function (_super) {
         _super.call(this, 35, new Vector(0, 0));
         this.color = "Blue";
     }
+    BlueCircle.prototype.follow = function (cir) {
+        this.moveToPosition(cir);
+    };
     return BlueCircle;
 }(Circle));
 var State = (function () {
@@ -172,7 +175,6 @@ var RedCircle = (function (_super) {
 }(Circle));
 var CANV = document.createElement("canvas");
 document.body.appendChild(CANV);
-// document.body.style.background = "#f3f3f3 url('Lined-Paper.png')"
 var LASTCLICK = new Vector(0, 0);
 CANV.onclick = function updateLastClick(event) {
     LASTCLICK = new Vector(event.pageX, event.pageY);
@@ -183,14 +185,17 @@ var CNTX = CANV.getContext("2d");
 var red = new RedCircle();
 var blu = new BlueCircle();
 red.setVelocity(new Vector(1, 0));
+blu.setVelocity(new Vector(1, 0));
 var GAME_FRAME = 0;
 // I want this to be kind of a portable test service or something. I dunno,
 // maybe I'll make an elaborate test module or something, too.
 function start() {
     //Vector.minus(red.pos, new Vector(0, 0))))
     clearScreen();
+    blu.follow(red.pos);
     red.moveToPosition(LASTCLICK);
     red.draw();
+    blu.draw();
     GAME_FRAME++;
     requestAnimationFrame(start);
 }
