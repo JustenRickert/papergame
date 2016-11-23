@@ -4,6 +4,30 @@ The idea is to come up with a really great browser game written in Typescript.
 Thus far the game contains:
 - [X] Circles that can move around on the page
 
+I got the circles to move around in a pretty straightforward, I think.
+
+- [X] Basic Collision implementation
+
+At the moment I'm dealing with the circle's logistical problems. I have included
+a notion called `state' which will house a collision attribute. At each frame,
+the collision status of each circle will be measured. In the future when more
+interesting things are to happen this function may be able to facilitate other
+effects as well. Perhaps the function can be append to pass an array of data
+that could be useful to the functions utilizing it.
+
+What I want to do now is possibly just that. I was thinking I could simply
+change the `acc' value temporarily while the 'colliding' is true. It would be
+set to the value opposing its direction to the colliding circle, so
+`acc_value' * (distance - v1.radius - v2.radius). So an acceleration opposing
+the closeness of the circles so that the two will be pushed away.
+
+- [ ] Physics Collision
+
+After that they need to be able to not like each other. So they have to take
+damage and stuff from each other.
+
+- [ ] Attacking
+
 * Plan
 I am hoping to have it so that there can be two sides, each starting on the
 opposing side of the map, that will have attacking units. Thus I will need to
@@ -11,3 +35,4 @@ implement
 - [ ] Friendly units
 - [ ] Enemy units
 - [ ] A dialog that allows friendly units and enemy units to interact.
+

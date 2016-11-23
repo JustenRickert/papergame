@@ -63,16 +63,29 @@ var Vector = (function () {
     };
     return Vector;
 }());
+var State = (function () {
+    function State() {
+        this.movement = true;
+        this.turn = true;
+        this.colliding = false;
+    }
+    State.prototype.collision = function () {
+        return this.colliding;
+    };
+    return State;
+}());
 // Circles are cool!
 var Circle = (function () {
-    function Circle(radius, pos, vel, acc, color, bandColor, direction, speed, turnRate) {
+    function Circle(radius, pos, vel, acc, color, bandColor, direction, speed, acc_value, turnRate, state) {
         if (vel === void 0) { vel = new Vector(0, 0); }
         if (acc === void 0) { acc = new Vector(0, 0); }
         if (color === void 0) { color = 'Black'; }
         if (bandColor === void 0) { bandColor = 'Black'; }
         if (direction === void 0) { direction = 0; }
         if (speed === void 0) { speed = 2.0; }
+        if (acc_value === void 0) { acc_value = 1.0; }
         if (turnRate === void 0) { turnRate = 0.1; }
+        if (state === void 0) { state = new State(); }
         this.radius = radius;
         this.pos = pos;
         this.vel = vel;
@@ -81,7 +94,9 @@ var Circle = (function () {
         this.bandColor = bandColor;
         this.direction = direction;
         this.speed = speed;
+        this.acc_value = acc_value;
         this.turnRate = turnRate;
+        this.state = state;
     }
     Circle.prototype.move = function (new_x, new_y) {
         this.pos = new Vector(new_x, new_y);
@@ -95,15 +110,16 @@ var Circle = (function () {
     Circle.prototype.turn = function (delta) {
         /* a positive value indicates turning clockwise,  */
         this.direction = Math.abs(this.direction + delta) >= 2 * Math.PI ?
-            (this.direction + delta) % Math.PI :
-            this.direction + delta;
+            (this.direction + delta) % Math.PI : this.direction + delta;
         this.adjustVelocityToDirection();
     };
     Circle.prototype.turnToPosition = function (pos) {
         if (Math.abs(Vector.angleBetween(this.vel, Vector.minus(pos, this.pos))) > .07) {
-            this.turn(this.turnRate
-                * Vector.directionTo(this.vel, Vector.minus(pos, this.pos)));
+            this.turn(this.turnRate * Vector.directionTo(this.vel, Vector.minus(pos, this.pos)));
         }
+    };
+    Circle.prototype.setSpeed = function (spd) {
+        this.speed = spd;
     };
     Circle.prototype.setVelocity = function (vel) {
         this.vel = new Vector(vel.x, vel.y);
@@ -122,6 +138,7 @@ var Circle = (function () {
         CNTX.beginPath();
         CNTX.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
         CNTX.closePath();
+        // color in the circle
         CNTX.fillStyle = this.color;
         CNTX.fill();
         // Draw the triangle at this.direction at half radius. I think I'm going
@@ -131,15 +148,31 @@ var Circle = (function () {
         // forward point
         CNTX.moveTo(this.pos.x + (3 * this.radius / 4) * Math.sin(this.direction), this.pos.y + (3 * this.radius / 4) * Math.cos(this.direction));
         // point to the left (or right, I dunno and it doesn't matter)
-        CNTX.lineTo(this.pos.x +
-            (2 * this.radius / 4) * Math.sin(this.direction + Math.PI / 3), this.pos.y +
-            (2 * this.radius / 4) * Math.cos(this.direction + Math.PI / 3));
-        CNTX.lineTo(this.pos.x +
-            (2 * this.radius / 4) * Math.sin(this.direction - Math.PI / 3), this.pos.y +
-            (2 * this.radius / 4) * Math.cos(this.direction - Math.PI / 3));
+        CNTX.lineTo(this.pos.x + (2 * this.radius / 4) * Math.sin(this.direction + Math.PI / 3), this.pos.y + (2 * this.radius / 4) * Math.cos(this.direction + Math.PI / 3));
+        CNTX.lineTo(this.pos.x + (2 * this.radius / 4) * Math.sin(this.direction - Math.PI / 3), this.pos.y + (2 * this.radius / 4) * Math.cos(this.direction - Math.PI / 3));
+        // color it in
         CNTX.fillStyle = this.bandColor;
         CNTX.fill();
         CNTX.closePath();
+    };
+    Circle.prototype.setColliding = function () {
+        this.state.colliding = true;
+    };
+    Circle.prototype.unsetColliding = function () {
+        this.state.colliding = false;
+    };
+    Circle.isThenColliding = function (c1, c2) {
+        if (Circle.isColliding(c1, c2)) {
+            c1.setColliding();
+            c2.setColliding();
+        }
+        else {
+            c1.unsetColliding();
+            c2.unsetColliding();
+        }
+    };
+    Circle.isColliding = function (c1, c2) {
+        return Vector.dist(c1.pos, c2.pos) < c1.radius + c2.radius;
     };
     return Circle;
 }());
@@ -155,13 +188,6 @@ var BlueCircle = (function (_super) {
     };
     return BlueCircle;
 }(Circle));
-var State = (function () {
-    function State() {
-        this.movement = true;
-        this.turn = true;
-    }
-    return State;
-}());
 // Red is the bad guys! Boo on them. They are a separate class because they are
 // going to have separate functions from the blue guys.
 var RedCircle = (function (_super) {
@@ -185,15 +211,36 @@ var CNTX = CANV.getContext("2d");
 var red = new RedCircle();
 var blu = new BlueCircle();
 red.setVelocity(new Vector(1, 0));
-blu.setVelocity(new Vector(1, 0));
+blu.setVelocity(new Vector(0.5, 0));
+blu.setSpeed(0.5);
 var GAME_FRAME = 0;
 // I want this to be kind of a portable test service or something. I dunno,
 // maybe I'll make an elaborate test module or something, too.
 function start() {
     //Vector.minus(red.pos, new Vector(0, 0))))
     clearScreen();
-    blu.follow(red.pos);
-    red.moveToPosition(LASTCLICK);
+    Circle.isThenColliding(red, blu);
+    // console.log(red.state, blu.state);
+    if (blu.state.colliding) {
+    }
+    else {
+        blu.follow(red.pos);
+    }
+    if (red.state.colliding) {
+        if (Math.abs(Vector.angleBetween(red.vel, Vector.minus(red.pos, blu.pos)))
+            < Math.PI / 1.4) {
+            // circle move around the other circle. This is so far a naive way of dealing
+            // with this, but it should be too hard to add a physics based "pushing"
+            // affect simply on top of this.
+            red.moveToPosition(LASTCLICK);
+        }
+        else {
+            red.turnToPosition(LASTCLICK);
+        }
+    }
+    else {
+        red.moveToPosition(LASTCLICK);
+    }
     red.draw();
     blu.draw();
     GAME_FRAME++;

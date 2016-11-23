@@ -57,28 +57,20 @@ class Vector {
             return angle > 0 ? -1 : 1;
         }
     }
-    // private static angle_trunc(angle: number) {
-    //     while (angle < 0.0) {
-    //         angle += Math.PI * 2
-    //     }
-    //     return angle
-    // }
 }
+class State {
+    constructor() { }
+    public movement = true;
+    public turn = true;
+    public colliding = false;
 
-// This could maybe have a better name
-interface Thing {
-    pos: Vector;
-    vel: Vector;
-    acc: Vector;
-    color: string;
-    bandColor: string;
-    direction: number; // this is an angle. Maybe there's a better way to
-    // abstract this?
-    radius: number;
+    public collision(): boolean { // Not sure if I should use this, tbh
+        return this.colliding;
+    }
 }
 
 // Circles are cool!
-class Circle implements Thing {
+class Circle {
     constructor(
         public radius: number,
         public pos: Vector,
@@ -88,7 +80,9 @@ class Circle implements Thing {
         public bandColor: string = 'Black',
         public direction: number = 0,
         public speed: number = 2.0,
-        public turnRate: number = 0.1) {
+        public acc_value: number = 1.0,
+        public turnRate: number = 0.1,
+        public state: State = new State()) {
     }
     public move(new_x: number, new_y: number): void {
         this.pos = new Vector(new_x, new_y)
@@ -99,28 +93,27 @@ class Circle implements Thing {
             this.pos.y + this.speed * this.vel.y);
     }
     private adjustVelocityToDirection(): void {
-        this.setVelocity(new Vector(
-            Math.sin(this.direction),
-            Math.cos(this.direction)));
+        this.setVelocity(new Vector(Math.sin(this.direction), Math.cos(this.direction)));
     }
     public turn(delta): void {
         /* a positive value indicates turning clockwise,  */
         this.direction = Math.abs(this.direction + delta) >= 2 * Math.PI ?
-            (this.direction + delta) % Math.PI :
-            this.direction + delta;
-        this.adjustVelocityToDirection()
+            (this.direction + delta) % Math.PI : this.direction + delta;
+        this.adjustVelocityToDirection();
     }
     public turnToPosition(pos: Vector): void {
         if (Math.abs(Vector.angleBetween(this.vel, Vector.minus(pos, this.pos))) > .07) {
-            this.turn(this.turnRate
-                      * Vector.directionTo(this.vel, Vector.minus(pos, this.pos)));
+            this.turn(this.turnRate * Vector.directionTo(this.vel, Vector.minus(pos, this.pos)));
         }
     }
+    public setSpeed(spd: number): void {
+        this.speed = spd;
+    }
     public setVelocity(vel: Vector): void {
-        this.vel = new Vector(vel.x, vel.y)
+        this.vel = new Vector(vel.x, vel.y);
     }
     public addVelocity(vel: Vector): void {
-        this.vel = new Vector(this.vel.x + vel.x, this.vel.y + vel.y)
+        this.vel = new Vector(this.vel.x + vel.x, this.vel.y + vel.y);
     }
     public moveToPosition(pos: Vector): void {
         if (Vector.dist(this.pos, pos) > this.radius / 3) {
@@ -133,6 +126,7 @@ class Circle implements Thing {
         CNTX.beginPath();
         CNTX.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
         CNTX.closePath();
+        // color in the circle
         CNTX.fillStyle = this.color;
         CNTX.fill();
         // Draw the triangle at this.direction at half radius. I think I'm going
@@ -145,18 +139,33 @@ class Circle implements Thing {
             this.pos.y + (3 * this.radius / 4) * Math.cos(this.direction));
         // point to the left (or right, I dunno and it doesn't matter)
         CNTX.lineTo(
-            this.pos.x +
-            (2 * this.radius / 4) * Math.sin(this.direction + Math.PI / 3),
-            this.pos.y +
-            (2 * this.radius / 4) * Math.cos(this.direction + Math.PI / 3));
+            this.pos.x + (2 * this.radius / 4) * Math.sin(this.direction + Math.PI / 3),
+            this.pos.y + (2 * this.radius / 4) * Math.cos(this.direction + Math.PI / 3));
         CNTX.lineTo(
-            this.pos.x +
-            (2 * this.radius / 4) * Math.sin(this.direction - Math.PI / 3),
-            this.pos.y +
-            (2 * this.radius / 4) * Math.cos(this.direction - Math.PI / 3));
+            this.pos.x + (2 * this.radius / 4) * Math.sin(this.direction - Math.PI / 3),
+            this.pos.y + (2 * this.radius / 4) * Math.cos(this.direction - Math.PI / 3));
+        // color it in
         CNTX.fillStyle = this.bandColor;
         CNTX.fill();
         CNTX.closePath();
+    }
+    public setColliding() {
+        this.state.colliding = true;
+    }
+    public unsetColliding() {
+        this.state.colliding = false;
+    }
+    static isThenColliding(c1: Circle, c2: Circle): void {
+        if (Circle.isColliding(c1, c2)) {
+            c1.setColliding();
+            c2.setColliding();
+        } else {
+            c1.unsetColliding();
+            c2.unsetColliding();
+        }
+    }
+    static isColliding(c1: Circle, c2: Circle): boolean {
+        return Vector.dist(c1.pos, c2.pos) < c1.radius + c2.radius
     }
 }
 
@@ -169,12 +178,6 @@ class BlueCircle extends Circle {
     public follow(cir: Vector): void {
         this.moveToPosition(cir);
     }
-}
-
-class State {
-    constructor() {}
-    public movement = true;
-    public turn = true;
 }
 
 // Red is the bad guys! Boo on them. They are a separate class because they are
@@ -202,7 +205,8 @@ var CNTX = CANV.getContext("2d");
 var red = new RedCircle();
 var blu = new BlueCircle();
 red.setVelocity(new Vector(1, 0));
-blu.setVelocity(new Vector(1, 0));
+blu.setVelocity(new Vector(0.5, 0));
+blu.setSpeed(0.5);
 var GAME_FRAME = 0;
 
 // I want this to be kind of a portable test service or something. I dunno,
@@ -210,8 +214,26 @@ var GAME_FRAME = 0;
 function start() {
     //Vector.minus(red.pos, new Vector(0, 0))))
     clearScreen();
-    blu.follow(red.pos);
-    red.moveToPosition(LASTCLICK)
+    Circle.isThenColliding(red, blu);
+    // console.log(red.state, blu.state);
+    if (blu.state.colliding) {
+    } else {
+        blu.follow(red.pos);
+    }
+    if (red.state.colliding) {
+        if (Math.abs(Vector.angleBetween(red.vel, Vector.minus(red.pos, blu.pos)))
+            < Math.PI / 1.4) {// 1.4 is a kind of "squeeze" amount. It let's the one
+            // circle move around the other circle. This is so far a naive way of dealing
+            // with this, but it should be too hard to add a physics based "pushing"
+            // affect simply on top of this.
+            red.moveToPosition(LASTCLICK);
+        } else {
+            red.turnToPosition(LASTCLICK);
+        }
+    } else {
+        red.moveToPosition(LASTCLICK);
+    }
+
     red.draw();
     blu.draw();
     GAME_FRAME++;
