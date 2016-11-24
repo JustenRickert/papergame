@@ -68,12 +68,20 @@ var State = (function () {
         this.movement = true;
         this.turn = true;
         this.colliding = false;
+        this.cqc = false;
+        this.sitting = true;
     }
-    State.prototype.collision = function () {
-        return this.colliding;
+    State.sittingOn = function (st) {
+        st.sitting = true;
+    };
+    State.sittingOff = function (st) {
+        st.sitting = false;
     };
     return State;
 }());
+/* FORCE AND MOMENTUM
+ *   I need force and momentum so I can do the physical interactions between the
+ * circles. */
 var Force = (function () {
     function Force(mass, vect) {
         this.mass = mass;
@@ -98,18 +106,85 @@ var Physics = (function () {
     }
     return Physics;
 }());
+/* TIMED ACTION */
+var UnitEvent = (function () {
+    function UnitEvent(circle, affect, count, lastTrigger) {
+        this.circle = circle;
+        this.affect = affect;
+        this.count = count;
+        this.lastTrigger = lastTrigger;
+    }
+    UnitEvent.prototype.decrement = function () {
+        this.count -= 1;
+    };
+    return UnitEvent;
+}());
+var SideStep = (function (_super) {
+    __extends(SideStep, _super);
+    function SideStep(circle, stepping, direction) {
+        if (stepping === void 0) { stepping = 3; }
+        if (direction === void 0) { direction = 'left'; }
+        _super.call(this, circle, 'sideStep', 30);
+        this.circle = circle;
+        this.stepping = stepping;
+        this.direction = direction;
+    }
+    SideStep.prototype.decrementStepping = function () {
+        this.stepping -= 1;
+    };
+    SideStep.prototype.onZero = function () {
+        this.decrementStepping();
+        if (this.stepping > 0) {
+            if (this.direction === 'left') {
+                this.circle.lateralForceRight();
+            }
+            else if (this.direction === 'right') {
+                this.circle.lateralForceLeft();
+            }
+            if (!this.circle.state.sitting) {
+                this.count = 30;
+                return;
+            }
+            this.circle.impulse();
+            this.circle.moveByMomentum();
+        }
+        else if (this.direction === 'left') {
+            this.stepping = 3;
+            this.direction = 'right';
+        }
+        else {
+            this.direction = 'left';
+            this.count = 30;
+        }
+    };
+    return SideStep;
+}(UnitEvent));
+var twitch = (function (_super) {
+    __extends(twitch, _super);
+    function twitch() {
+        _super.apply(this, arguments);
+    }
+    return twitch;
+}(UnitEvent));
+var TimeAction = (function () {
+    function TimeAction() {
+    }
+    return TimeAction;
+}());
 // Circles are cool!
 var Circle = (function () {
-    function Circle(radius, pos, vel, phys, color, bandColor, direction, speed, acc_value, turnRate, state) {
+    function Circle(radius, pos, vel, phys, color, bandColor, direction, speed, acc_value, turnRate, state, lastPosition // this is set in detectSitting()
+        ) {
         if (vel === void 0) { vel = new Vector(0, 0); }
         if (phys === void 0) { phys = new Physics(new Force(Math.PI * radius, new Vector(0, 0)), new Momentum(Math.PI * radius, new Vector(0, 0))); }
         if (color === void 0) { color = 'Black'; }
         if (bandColor === void 0) { bandColor = 'Black'; }
         if (direction === void 0) { direction = 0; }
         if (speed === void 0) { speed = 2.0; }
-        if (acc_value === void 0) { acc_value = 1.0; }
+        if (acc_value === void 0) { acc_value = 200.0; }
         if (turnRate === void 0) { turnRate = 0.1; }
         if (state === void 0) { state = new State(); }
+        if (lastPosition === void 0) { lastPosition = new Vector(-1, -1); }
         this.radius = radius;
         this.pos = pos;
         this.vel = vel;
@@ -121,7 +196,17 @@ var Circle = (function () {
         this.acc_value = acc_value;
         this.turnRate = turnRate;
         this.state = state;
+        this.lastPosition = lastPosition;
     }
+    Circle.prototype.detectSitting = function () {
+        if (Vector.dist(this.pos, this.lastPosition) <= .1) {
+            State.sittingOn(this.state);
+        }
+        else {
+            State.sittingOff(this.state);
+        }
+        this.lastPosition = this.pos;
+    };
     Circle.prototype.move = function (new_x, new_y) {
         this.pos = new Vector(new_x, new_y);
     };
@@ -131,15 +216,6 @@ var Circle = (function () {
     Circle.prototype.moveForwardByVec = function (vec) {
         this.pos = Vector.plus(this.pos, vec);
     };
-    // public moveVelByAcc(): void {
-    //     if (this.acc.x === 0 && this.acc.y === 0) {
-    //         this.vel = new Vector(
-    //             this.vel.x + this.acc_value * this.acc.x,
-    //             this.vel.y + this.acc_value * this.acc.y);
-    //     } else {
-    //         this.vel = new Vector(0, 0);
-    //     }
-    // }
     Circle.prototype.adjustVelocityToDirection = function () {
         this.setVel(new Vector(Math.sin(this.direction), Math.cos(this.direction)));
     };
@@ -164,7 +240,7 @@ var Circle = (function () {
         this.vel = new Vector(this.vel.x + vel.x, this.vel.y + vel.y);
     };
     Circle.prototype.moveToPosition = function (pos) {
-        if (Vector.dist(this.pos, pos) > this.radius / 3) {
+        if (Vector.dist(this.pos, pos) > this.radius / 10) {
             this.moveForwardByVel();
         }
         this.turnToPosition(pos);
@@ -197,6 +273,31 @@ var Circle = (function () {
     Circle.prototype.unsetColliding = function () {
         this.state.colliding = false;
         this.phys.force.vect = new Vector(0, 0);
+    };
+    Circle.prototype.lateralForceLeft = function () {
+        this.phys.force.vect.x = this.acc_value * this.vel.y;
+        this.phys.force.vect.y = this.acc_value * -this.vel.x;
+    };
+    Circle.prototype.lateralForceRight = function () {
+        this.phys.force.vect.x = this.acc_value * this.vel.y;
+        this.phys.force.vect.y = this.acc_value * -this.vel.x;
+    };
+    // A lateral movement increases the overall speed of the circle, but it
+    // doesn't decrease the time it will take to get to the target. That's so
+    // fucking interesting!
+    Circle.lateralMoveRight = function (c) {
+        c.pos = new Vector(c.pos.x - c.vel.y, c.pos.y + c.vel.x);
+    };
+    Circle.lateralMoveLeft = function (c) {
+        c.pos = new Vector(c.pos.x + c.vel.y, c.pos.y - c.vel.x);
+    };
+    Circle.lateralForceLeft = function (c) {
+        c.phys.force.vect.x = c.vel.y;
+        c.phys.force.vect.y = -c.vel.x;
+    };
+    Circle.lateralForceRight = function (c) {
+        c.phys.force.vect.x = -c.vel.y;
+        c.phys.force.vect.y = c.vel.x;
     };
     Circle.prototype.moveMomentumVector = function () {
     };
@@ -269,6 +370,7 @@ CANV.height = 2380;
 var CNTX = CANV.getContext("2d");
 var red = new RedCircle();
 var blu = new BlueCircle();
+var sideStep = new SideStep(red);
 red.setVel(new Vector(1, 0));
 blu.setVel(new Vector(0.5, 0));
 blu.setSpeed(0.5);
@@ -276,11 +378,18 @@ var GAME_FRAME = 0;
 // I want this to be kind of a portable test service or something. I dunno,
 // maybe I'll make an elaborate test module or something, too.
 function start() {
+    red.detectSitting();
+    if (red.state.sitting) {
+        sideStep.decrement();
+        if (sideStep.count > 0) {
+        }
+        else {
+            sideStep.onZero();
+        }
+    }
     //Vector.minus(red.pos, new Vector(0, 0))))
-    console.log(red.phys.momen.vect);
     clearScreen();
     Circle.isThenColliding(red, blu);
-    // console.log(red.state, blu.state);
     if (blu.state.colliding) {
     }
     else {
@@ -315,8 +424,8 @@ function start() {
         red.moveToPosition(LASTCLICK);
         red.unsetColliding(); // This is for the state
         blu.unsetColliding(); // Really, it should be blu.state.unsetColliding() {I think?}
-        red.frictionMomentum(0.9); // Slows the thing down afterwards
-        blu.frictionMomentum(0.9);
+        red.frictionMomentum(0.90); // Slows the thing down afterwards
+        blu.frictionMomentum(0.90);
         red.moveByMomentum(); // Still needs to move, even if not colliding
         blu.moveByMomentum();
     }

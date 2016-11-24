@@ -64,11 +64,20 @@ class State {
     public movement = true;
     public turn = true;
     public colliding = false;
+    public cqc = false;
+    public sitting = true;
 
-    public collision(): boolean { // Not sure if I should use this, tbh
-        return this.colliding;
+    static sittingOn(st: State) {
+        st.sitting = true
+    }
+    static sittingOff(st: State) {
+        st.sitting = false
     }
 }
+
+/* FORCE AND MOMENTUM
+ *   I need force and momentum so I can do the physical interactions between the
+ * circles. */
 
 class Force {
     constructor(
@@ -93,6 +102,57 @@ class Physics {
         public momen: Momentum) { }
 }
 
+/* TIMED ACTION */
+
+class UnitEvent {
+    constructor(
+        public circle: Circle,
+        public affect: string,
+        public count: number,
+        public lastTrigger?: number) {
+    }
+    public decrement() {
+        this.count -= 1;
+    }
+}
+
+class SideStep extends UnitEvent {
+    constructor(
+        public circle: Circle,
+        public stepping: number = 3,
+        public direction: string = 'left') {
+        super(circle, 'sideStep', 30)
+    }
+    public decrementStepping() {
+        this.stepping -= 1;
+    }
+    public onZero(): void {
+        this.decrementStepping();
+        if (this.stepping > 0) {
+            if (this.direction === 'left') {
+                this.circle.lateralForceRight();
+            } else if (this.direction === 'right') {
+                this.circle.lateralForceLeft();
+            }
+            if(!this.circle.state.sitting){
+                this.count = 30
+                return
+            }
+            this.circle.impulse();
+            this.circle.moveByMomentum();
+        } else if (this.direction === 'left') {
+            this.stepping = 3;
+            this.direction = 'right';
+        } else {
+            this.direction = 'left';
+            this.count = 30;
+        }
+    }
+}
+
+class twitch extends UnitEvent {
+}
+
 // Circles are cool!
 class Circle {
     constructor(
@@ -106,9 +166,20 @@ class Circle {
         public bandColor: string = 'Black',
         public direction: number = 0,
         public speed: number = 2.0,
-        public acc_value: number = 1.0,
+        public acc_value: number = 200.0,
         public turnRate: number = 0.1,
-        public state: State = new State()) {
+        public state: State = new State(),
+
+        private lastPosition = new Vector(-1, -1) // this is set in detectSitting()
+    ) {
+    }
+    public detectSitting(): void {
+        if (Vector.dist(this.pos, this.lastPosition) <= .1) {
+            State.sittingOn(this.state);
+        } else {
+            State.sittingOff(this.state);
+        }
+        this.lastPosition = this.pos;
     }
     public move(new_x: number, new_y: number): void {
         this.pos = new Vector(new_x, new_y)
@@ -121,15 +192,6 @@ class Circle {
     public moveForwardByVec(vec: Vector): void {
         this.pos = Vector.plus(this.pos, vec);
     }
-    // public moveVelByAcc(): void {
-    //     if (this.acc.x === 0 && this.acc.y === 0) {
-    //         this.vel = new Vector(
-    //             this.vel.x + this.acc_value * this.acc.x,
-    //             this.vel.y + this.acc_value * this.acc.y);
-    //     } else {
-    //         this.vel = new Vector(0, 0);
-    //     }
-    // }
     private adjustVelocityToDirection(): void {
         this.setVel(new Vector(Math.sin(this.direction), Math.cos(this.direction)));
     }
@@ -154,7 +216,7 @@ class Circle {
         this.vel = new Vector(this.vel.x + vel.x, this.vel.y + vel.y);
     }
     public moveToPosition(pos: Vector): void {
-        if (Vector.dist(this.pos, pos) > this.radius / 3) {
+        if (Vector.dist(this.pos, pos) > this.radius / 10) {
             this.moveForwardByVel();
         }
         this.turnToPosition(pos);
@@ -193,6 +255,36 @@ class Circle {
     public unsetColliding() {
         this.state.colliding = false;
         this.phys.force.vect = new Vector(0, 0);
+    }
+    public lateralForceLeft(): void {
+        this.phys.force.vect.x = this.acc_value * this.vel.y;
+        this.phys.force.vect.y = this.acc_value * -this.vel.x;
+    }
+
+    public lateralForceRight(): void {
+        this.phys.force.vect.x = this.acc_value * this.vel.y;
+        this.phys.force.vect.y = this.acc_value * -this.vel.x;
+    }
+    // A lateral movement increases the overall speed of the circle, but it
+    // doesn't decrease the time it will take to get to the target. That's so
+    // fucking interesting!
+    static lateralMoveRight(c: Circle): void {
+        c.pos = new Vector(
+            c.pos.x - c.vel.y,
+            c.pos.y + c.vel.x);
+    }
+    static lateralMoveLeft(c: Circle): void {
+        c.pos = new Vector(
+            c.pos.x + c.vel.y,
+            c.pos.y - c.vel.x);
+    }
+    static lateralForceLeft(c: Circle): void {
+        c.phys.force.vect.x = c.vel.y;
+        c.phys.force.vect.y = -c.vel.x;
+    }
+    static lateralForceRight(c: Circle): void {
+        c.phys.force.vect.x = -c.vel.y;
+        c.phys.force.vect.y = c.vel.x;
     }
     public moveMomentumVector() {
     }
@@ -266,6 +358,7 @@ var CNTX = CANV.getContext("2d");
 
 var red = new RedCircle();
 var blu = new BlueCircle();
+var sideStep = new SideStep(red);
 red.setVel(new Vector(1, 0));
 blu.setVel(new Vector(0.5, 0));
 blu.setSpeed(0.5);
@@ -274,11 +367,23 @@ var GAME_FRAME = 0;
 // I want this to be kind of a portable test service or something. I dunno,
 // maybe I'll make an elaborate test module or something, too.
 function start() {
+    // Okay. So this is my first attempt at a thing called I am calling a Unit
+    // Event. It's a time-based action that unfolds under certain conditions.
+    // This one makes the red guy flip out. I think it's pretty naive, and it
+    // doesn't seem to operate very well, but I'm sure things will get better
+    // when I have a better understanding of a method that can accomplish
+    // interesting things.
+    red.detectSitting();
+    if (red.state.sitting) {
+        sideStep.decrement();
+        if (sideStep.count > 0) {
+        } else {
+            sideStep.onZero();
+        }
+    }
     //Vector.minus(red.pos, new Vector(0, 0))))
-    console.log(red.phys.momen.vect);
     clearScreen();
     Circle.isThenColliding(red, blu);
-    // console.log(red.state, blu.state);
     if (blu.state.colliding) {
     } else {
         blu.follow(red.pos);
@@ -317,8 +422,8 @@ function start() {
         red.moveToPosition(LASTCLICK);
         red.unsetColliding();   // This is for the state
         blu.unsetColliding();   // Really, it should be blu.state.unsetColliding() {I think?}
-        red.frictionMomentum(0.9); // Slows the thing down afterwards
-        blu.frictionMomentum(0.9);
+        red.frictionMomentum(0.90); // Slows the thing down afterwards
+        blu.frictionMomentum(0.90);
         red.moveByMomentum();   // Still needs to move, even if not colliding
         blu.moveByMomentum();
     }
