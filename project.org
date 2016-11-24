@@ -1,6 +1,6 @@
 -*- mode: org -*-
 
-* Idea
+* Idea/Plan
 The idea is to come up with a really great browser game written in Typescript.
 Thus far the game contains:
 
@@ -20,7 +20,7 @@ Thus far the game contains:
     `acc_value' * (distance - v1.radius - v2.radius). So an acceleration
     opposing the closeness of the circles so that the two will be pushed away.
 
-- [ ] Physics Collision
+- [X] Physics Collision
   - I've been toying around with it. I think what I need to do is split the
     movement into two separate methods:
     - *Movement based movement* meaning everything just wants to move in the
@@ -31,19 +31,25 @@ Thus far the game contains:
       frame, this force is to be converted into momentum (which is being divided
       to move it toward zero) at every frame. These two things can be tweaked
       against one another until they then function appropriately on the screen.
+    - [ ] Just a *note* on this. It might be that the division operation in the
+      lateralForce functions is pretty difficult to do. It seems when that when
+      this function gets called a lot (for example when two circles are
+      colliding a lot) that the browser tends to lag a little bit.
   - After that they need to be able to not like each other. So they have to take
     damage and stuff from each other.
 
 - [ ] Attacking
   - Make the red guy have health and the other guys not have health. Then when one
     attacks the other loses health. Heh.
+  - [ ] I have added the *battle.tsx* which is to be the interface to which to
+    talk with the Circle classes. So the check here is to shell out that class a
+    little bit more.
 
-* Plan
 I am hoping to have it so that there can be two sides, each starting on the
 opposing side of the map, that will have attacking units. Thus I will need to
-implement
-
-- [ ] Friendly units
-- [ ] Enemy units
-- [ ] A dialog that allows friendly units and enemy units to interact.
+implement:
+- [ ] Friendly units {BlueCircle}
+- [ ] Enemy units {RedCircle}
+- [ ] A dialog that allows friendly units and enemy units to interact. This is
+  going to be the Battle.tsx file.
 
