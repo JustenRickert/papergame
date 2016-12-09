@@ -56,16 +56,6 @@ blu.setSpeed(0.5);
 var GAME_FRAME = 0;
 var reds = new Reds(21);
 reds.positionAll();
-// var list = []
-// for (var i = 0; i < 1; i++) {
-//     list.push(new RedCircle())
-// }
-// for (var i = 0; i < 1; i++) {
-// list[i].move(12 + 20 * i, 12 + 20 * i);
-// list[i].draw();
-//     console.log(list[0].pos);
-//     console.log(red.pos);
-// }
 // I want this to be kind of a portable test service or something. I dunno,
 // maybe I'll make an elaborate test module or something, too.
 function start() {
