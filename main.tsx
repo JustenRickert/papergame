@@ -11,8 +11,6 @@
  * defend other specific pieces, or attack unrelentingly---so that the end goal
  * is one team winning over the other. */
 
-
-
 // Blue is the good guys, but maybe add user changeable colors or something.
 class BlueCircle extends Circle {
     constructor() {
@@ -47,6 +45,7 @@ CANV.height = 2380;
 var CNTX = CANV.getContext("2d");
 
 var red = new RedCircle();
+red.move(1, 1)
 var blu = new BlueCircle();
 var sideStep = new SideStep(red);
 red.setVel(new Vector(1, 0));
@@ -54,14 +53,15 @@ blu.setVel(new Vector(0.5, 0));
 blu.setSpeed(0.5);
 var GAME_FRAME = 0;
 
-var reds = new Reds(21)
+var reds = new Reds(21);
+reds.positionAll();
 
 // I want this to be kind of a portable test service or something. I dunno,
 // maybe I'll make an elaborate test module or something, too.
 function start() {
-    for (var r of reds.all){
-        r.draw();
-    }
+    clearScreen();
+    reds.moveToPosition();
+    reds.draw();
     // Okay. So this is my first attempt at a thing called I am calling a Unit
     // Event. It's a time-based action that unfolds under certain conditions.
     // This one makes the red guy flip out. I think it's pretty naive, and it
@@ -77,7 +77,6 @@ function start() {
         }
     }
     //Vector.minus(red.pos, new Vector(0, 0))))
-    clearScreen();
     Circle.isThenColliding(red, blu);
     if (blu.state.colliding) {
     } else {
@@ -85,7 +84,7 @@ function start() {
     }
     if (red.state.colliding) {
         if (Math.abs(Vector.angleBetween(red.vel, Vector.minus(red.pos, blu.pos)))
-            < Math.PI / 1.4) {// 1.4 is a kind of "squeeze" amount. It lets the one
+            < Math.PI / 2.0) {// 1.4 is a kind of "squeeze" amount. It lets the one
             // circle move around the other circle. This is so far a naive way
             // of dealing with this, but it shouldn't be too hard to add a
             // physics-based "pushing" affect simply on top of this. I am trying

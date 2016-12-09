@@ -161,7 +161,7 @@ class Circle {
     }
     public moveByMomentum(): void {
         this.moveForwardByVec(
-            Vector.times(1 / this.phys.momen.mass, this.phys.momen.vect));
+            Vector.times(0.001, this.phys.momen.vect));
     }
     public frictionMomentum(coeff: number): void {
         /* coeff should be in (0,1) that's non-inclusive */
