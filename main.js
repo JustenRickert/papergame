@@ -142,6 +142,12 @@ var SideStep = (function (_super) {
                 this.circle.lateralForceLeft();
             }
             if (!this.circle.state.sitting) {
+                if (this.direction === 'left') {
+                    this.direction = 'right';
+                }
+                else {
+                    this.direction = 'left';
+                }
                 this.count = 30;
                 return;
             }
@@ -166,11 +172,6 @@ var twitch = (function (_super) {
     }
     return twitch;
 }(UnitEvent));
-var TimeAction = (function () {
-    function TimeAction() {
-    }
-    return TimeAction;
-}());
 // Circles are cool!
 var Circle = (function () {
     function Circle(radius, pos, vel, phys, color, bandColor, direction, speed, acc_value, turnRate, state, lastPosition // this is set in detectSitting()
@@ -340,7 +341,7 @@ var Circle = (function () {
 var BlueCircle = (function (_super) {
     __extends(BlueCircle, _super);
     function BlueCircle() {
-        _super.call(this, 35, new Vector(0, 0));
+        _super.call(this, 35, new Vector(500, 800));
         this.color = "Blue";
     }
     BlueCircle.prototype.follow = function (cir) {
@@ -375,9 +376,20 @@ red.setVel(new Vector(1, 0));
 blu.setVel(new Vector(0.5, 0));
 blu.setSpeed(0.5);
 var GAME_FRAME = 0;
+var reds = new Reds(21);
 // I want this to be kind of a portable test service or something. I dunno,
 // maybe I'll make an elaborate test module or something, too.
 function start() {
+    for (var _i = 0, _a = reds.all; _i < _a.length; _i++) {
+        var r = _a[_i];
+        r.draw();
+    }
+    // Okay. So this is my first attempt at a thing called I am calling a Unit
+    // Event. It's a time-based action that unfolds under certain conditions.
+    // This one makes the red guy flip out. I think it's pretty naive, and it
+    // doesn't seem to operate very well, but I'm sure things will get better
+    // when I have a better understanding of a method that can accomplish
+    // interesting things.
     red.detectSitting();
     if (red.state.sitting) {
         sideStep.decrement();

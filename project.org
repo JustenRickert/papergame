@@ -41,9 +41,9 @@ Thus far the game contains:
 - [ ] Attacking
   - Make the red guy have health and the other guys not have health. Then when one
     attacks the other loses health. Heh.
-  - [ ] I have added the *battle.tsx* which is to be the interface to which to
-    talk with the Circle classes. So the check here is to shell out that class a
-    little bit more.
+  - [ ] I have added the *battle.tsx* which is to be the method with which one can
+    talk about the Circle classes. So the check here is to shell out that class
+    a little bit more.
 
 I am hoping to have it so that there can be two sides, each starting on the
 opposing side of the map, that will have attacking units. Thus I will need to
