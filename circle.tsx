@@ -1,6 +1,7 @@
 
 // Circles are cool!
 class Circle {
+    public clippingForce: number = 0.009;
     constructor(
         public radius: number,
         public pos: Vector,
@@ -69,31 +70,31 @@ class Circle {
     }
     public draw(): void {
         // Draw the Circle
-        CNTX.beginPath();
-        CNTX.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
-        CNTX.closePath();
+        ctx.beginPath();
+        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
+        ctx.closePath();
         // color in the circle
-        CNTX.fillStyle = this.color;
-        CNTX.fill();
+        ctx.fillStyle = this.color;
+        ctx.fill();
         // Draw the triangle at this.direction at half radius. I think I'm going
         // to make all projectiles squares. Triangles could be designated as
         // structures.
-        CNTX.beginPath();
+        ctx.beginPath();
         // forward point
-        CNTX.moveTo(
+        ctx.moveTo(
             this.pos.x + (3 * this.radius / 4) * Math.sin(this.direction),
             this.pos.y + (3 * this.radius / 4) * Math.cos(this.direction));
         // point to the left (or right, I dunno and it doesn't matter)
-        CNTX.lineTo(
+        ctx.lineTo(
             this.pos.x + (2 * this.radius / 4) * Math.sin(this.direction + Math.PI / 3),
             this.pos.y + (2 * this.radius / 4) * Math.cos(this.direction + Math.PI / 3));
-        CNTX.lineTo(
+        ctx.lineTo(
             this.pos.x + (2 * this.radius / 4) * Math.sin(this.direction - Math.PI / 3),
             this.pos.y + (2 * this.radius / 4) * Math.cos(this.direction - Math.PI / 3));
         // color it in
-        CNTX.fillStyle = this.bandColor;
-        CNTX.fill();
-        CNTX.closePath();
+        ctx.fillStyle = this.bandColor;
+        ctx.fill();
+        ctx.closePath();
     }
     public setColliding() {
         this.state.colliding = true;
@@ -134,14 +135,22 @@ class Circle {
     }
     public moveMomentumVector() {
     }
-    static isThenColliding(c1: Circle, c2: Circle): void {
+    static isThenClipping(c1: Circle, c2: Circle): void {
         if (Circle.isColliding(c1, c2)) {
-            c1.setColliding();
-            c2.setColliding();
-        } else {
-            c1.unsetColliding();
-            c2.unsetColliding();
+            Circle.clippingPush(c1, c2)
         }
+    }
+    static clippingPush(c1: Circle, c2: Circle) {
+        let dist = Vector.dist(c1.pos, c2.pos)
+        let dirTo = Vector.minus(c1.pos, c2.pos);
+        let c1Force = dirTo;
+        let c2Force = Vector.times(-1, dirTo);
+        if (dist < (c1.radius + c2.radius)/2) {
+            c1.moveForwardByVec(Vector.times(15*c1.clippingForce, c1Force));
+            c2.moveForwardByVec(Vector.times(15*c2.clippingForce, c2Force));
+        }
+        c1.moveForwardByVec(Vector.times(c1.clippingForce, c1Force));
+        c2.moveForwardByVec(Vector.times(c2.clippingForce, c2Force));
     }
     // These static methods need to be in Circle, and not Vector, because they
     // need access to Circle.radius and other attributes.

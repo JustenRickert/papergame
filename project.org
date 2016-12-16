@@ -1,55 +1,23 @@
 -*- mode: org -*-
 
-* Idea/Plan
-The idea is to come up with a really great browser game written in Typescript.
-Thus far the game contains:
+* [2016-12-16 Fri]
+Okay, so this is just going to be like a developer diary sort of thing so I can
+remember where I picked off when I come back to this... So maybe this is kind of
+like day one or something. 
 
-- [X] Circles that can move around on the page
-  - I got the circles to move around in a pretty straightforward, I think.
+Anyway, I rethought of the system for collisions and things. I'm just going to
+call it clipping from now on. That seems better to me, as it allows for me to
+then call interactions between enemies collisions instead. And then that will
+have attack consequences and things to it.
 
-- [X] Basic Collision implementation
-  - At the moment I'm dealing with the circle's logistical problems. I have
-    included a notion called `state' which will house a collision attribute. At
-    each frame, the collision status of each circle will be measured. In the
-    future when more interesting things are to happen this function may be able
-    to facilitate other effects as well. Perhaps the function can be append to
-    pass an array of data that could be useful to the functions utilizing it.
-  - What I want to do now is possibly just that. I was thinking I could simply
-    change the `acc' value temporarily while the 'colliding' is true. It would
-    be set to the value opposing its direction to the colliding circle, so
-    `acc_value' * (distance - v1.radius - v2.radius). So an acceleration
-    opposing the closeness of the circles so that the two will be pushed away.
+Working forward, I need some way for the circles to move nicely/interestingly on
+the board, then I'll have to do the same thing for the blue guys. When I have
+both the reds and the blues, then I can start thinking about damage and stats
+and junk.
 
-- [X] Physics Collision
-  - I've been toying around with it. I think what I need to do is split the
-    movement into two separate methods:
-    - *Movement based movement* meaning everything just wants to move in the
-      direction that it wants to go. If it's in the wrong direction, it must
-      turn first.
-    - *Physics based movement* When two circles are colliding, there will be
-      applied an equal force between them, but in opposing directions. At each
-      frame, this force is to be converted into momentum (which is being divided
-      to move it toward zero) at every frame. These two things can be tweaked
-      against one another until they then function appropriately on the screen.
-    - [ ] Just a *note* on this. It might be that the division operation in the
-      lateralForce functions is pretty difficult to do. It seems when that when
-      this function gets called a lot (for example when two circles are
-      colliding a lot) that the browser tends to lag a little bit.
-  - After that they need to be able to not like each other. So they have to take
-    damage and stuff from each other.
-
-- [ ] Attacking
-  - Make the red guy have health and the other guys not have health. Then when one
-    attacks the other loses health. Heh.
-  - [ ] I have added the *battle.tsx* which is to be the method with which one can
-    talk about the Circle classes. So the check here is to shell out that class
-    a little bit more.
-
-I am hoping to have it so that there can be two sides, each starting on the
-opposing side of the map, that will have attacking units. Thus I will need to
-implement:
-- [ ] Friendly units {BlueCircle}
-- [ ] Enemy units {RedCircle}
-- [ ] A dialog that allows friendly units and enemy units to interact. This is
-  going to be the Battle.tsx file.
-
+Thus:
+- red movements
+- blue (should be mostly the same as red; so shouldn't take long.)
+- interactions between red and blue, so things like mean staring, attacking,
+  general aggression, etc. Maybe I could toy around with speech bubbles and
+  things.

@@ -1,6 +1,7 @@
 {
     "files": [
         "main.tsx",
+        "game.tsx",
         "reds.tsx",
         "circle.tsx",
         "vector.tsx"
