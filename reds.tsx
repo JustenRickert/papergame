@@ -1,5 +1,9 @@
 /* These are to be the place to have all of the red circles and things */
 
+// var p: Promise<any> = (resolve, reject) => int {
+//     resolve('a string')
+// };
+
 // Red is the bad guys! Boo on them. They are a separate class because they are
 // going to have separate functions from the blue guys.
 class RedCircle extends Circle {

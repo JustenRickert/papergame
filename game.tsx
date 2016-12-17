@@ -1,14 +1,6 @@
-// The canvas is pretty special:
-//   width="640"
-//   height="640"
+/* With this class I'm using the sort of outline they have for disjoint set data
+ * structures and operations. */
 
-var canvas: any = document.getElementById("gameCanvas");
-var ctx = canvas.getContext("2d");
-
-var LASTCLICK = new Vector(0, 0);
-canvas.onclick = function updateLastClick(event) {
-    LASTCLICK = new Vector(event.clientX, event.clientY);
-};
 
 class Game {
     public red: Reds;
@@ -31,13 +23,4 @@ class Game {
     }
 }
 
-// var red = new RedCircle();
-// red.move(1, 1);
-// var blu = new BlueCircle();
-// red.setVel(new Vector(1, 0));
-// blu.setVel(new Vector(0.5, 0));
-// blu.setSpeed(0.5);
-// var GAME_FRAME = 0;
-// var reds = new Reds(999);
-// reds.positionAll();
 

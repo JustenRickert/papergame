@@ -11,16 +11,36 @@
  * defend other specific pieces, or attack unrelentingly---so that the end goal
  * is one team winning over the other. */
 
-var game = new Game(7);
-
-game.spawnReds();
 function start() {
     clearScreen();
     game.collision();
     game.run();
     game.draw();
     requestAnimationFrame(start);
-} start();
+}
+
+
+var canvas: any = document.getElementById("gameCanvas");
+var ctx = canvas.getContext("2d");
+
+var LASTCLICK = new Vector(0, 0);
+canvas.onclick = function updateLastClick(event) {
+    console.log(event)
+    var mPos = getMousePos(canvas, event)
+    LASTCLICK = new Vector(mPos.x, mPos.y);
+};
+
+function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+    };
+}
+
+var game = new Game(7);
+game.spawnReds();
+start();
 
 
 

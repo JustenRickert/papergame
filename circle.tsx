@@ -1,7 +1,7 @@
 
 // Circles are cool!
 class Circle {
-    public clippingForce: number = 0.009;
+    public clippingForce: number = 0.011;
     constructor(
         public radius: number,
         public pos: Vector,
