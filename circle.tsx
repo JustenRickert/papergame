@@ -12,9 +12,9 @@ class Circle {
         public color: string = 'Black',
         public bandColor: string = 'Black',
         public direction: number = 0,
-        public speed: number = 2.0,
+        public speed: number = 2.5,
         public acc_value: number = 200.0,
-        public turnRate: number = 0.1,
+        public turnRate: number = 0.07,
         public state: State = new State(),
 
         private lastPosition = new Vector(-1, -1) // this is set in detectSitting()
@@ -63,10 +63,12 @@ class Circle {
         this.vel = new Vector(this.vel.x + vel.x, this.vel.y + vel.y);
     }
     public moveToPosition(pos: Vector): void {
-        if (Vector.dist(this.pos, pos) > this.radius / 10) {
-            this.moveForwardByVel();
-        }
         this.turnToPosition(pos);
+        if (Vector.angleBetween(this.vel, Vector.minus(pos, this.pos)) < .07) {
+            if (Vector.dist(this.pos, pos) > .1 * this.radius) {
+                this.moveForwardByVel();
+            }
+        }
     }
     public draw(): void {
         // Draw the Circle
@@ -145,9 +147,9 @@ class Circle {
         let dirTo = Vector.minus(c1.pos, c2.pos);
         let c1Force = dirTo;
         let c2Force = Vector.times(-1, dirTo);
-        if (dist < (c1.radius + c2.radius)/2) {
-            c1.moveForwardByVec(Vector.times(15*c1.clippingForce, c1Force));
-            c2.moveForwardByVec(Vector.times(15*c2.clippingForce, c2Force));
+        if (dist < (c1.radius + c2.radius) / 2) {
+            c1.moveForwardByVec(Vector.times(15 * c1.clippingForce, c1Force));
+            c2.moveForwardByVec(Vector.times(15 * c2.clippingForce, c2Force));
         }
         c1.moveForwardByVec(Vector.times(c1.clippingForce, c1Force));
         c2.moveForwardByVec(Vector.times(c2.clippingForce, c2Force));

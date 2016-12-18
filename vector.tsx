@@ -44,4 +44,7 @@ class Vector {
             return angle > 0 ? -1 : 1;
         }
     }
+    static random(): Vector {
+        return new Vector(2 * Math.random() - 1, 2 * Math.random() - 1)
+    }
 }

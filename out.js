@@ -50,30 +50,129 @@ var Vector = (function () {
             return angle > 0 ? -1 : 1;
         }
     };
+    Vector.random = function () {
+        return new Vector(2 * Math.random() - 1, 2 * Math.random() - 1);
+    };
     return Vector;
 }());
 /* With this class I'm using the sort of outline they have for disjoint set data
  * structures and operations. */
 var Game = (function () {
-    // TODO public blue: Blues;
     function Game(redCount) {
         this.red = new Reds(redCount);
     }
     Game.prototype.run = function () {
-        this.red.moveToPosition();
+        this.red.increment();
+        // this.red.moveToPosition();
+        this.behave();
     };
     Game.prototype.draw = function () {
         this.red.draw();
     };
-    Game.prototype.spawnReds = function () {
+    Game.prototype.spawnRed = function () {
         // spawns red dudes and then tells them what to do.
         this.red.positionAll();
     };
     Game.prototype.collision = function () {
         this.red.isThenClipping();
     };
+    Game.prototype.updateDistanceTable = function () {
+        this.distanceRed = this.red.distanceTable();
+    };
+    Game.prototype.bottomFiveDistance = function (r) {
+        var id = [];
+        if (this.distanceRed[r.id].length < 5) {
+            for (var j in this.distanceRed[r.id]) {
+                id.push(j);
+            }
+            return zip(id, this.distanceRed[r.id]);
+        }
+        var dist = [];
+        for (var j = 0; j < 5; j++) {
+            id.push(j);
+            dist.push(this.distanceRed[r.id][j]);
+        }
+        var smallest = dist.indexOf(min(dist));
+        for (var j = 5; j < this.distanceRed[r.id].length; j++) {
+            if (this.distanceRed[r.id][j] > dist[smallest]) {
+                dist[smallest] = this.distanceRed[r.id][j];
+                id[smallest] = j;
+                smallest = dist.indexOf(min(dist));
+            }
+        }
+        return zip(id, dist);
+    };
+    /* Returns the center of mass. All of the circles have the same mass, so
+     * it's a little silly to call it by that name (it is rather, the center of
+     * all the points), but it's convenient anyways now that you know what I'm
+     * talking about, hopefully. */
+    Game.moment = function (pos) {
+        var sum = new Vector(0, 0);
+        for (var _i = 0, pos_1 = pos; _i < pos_1.length; _i++) {
+            var p = pos_1[_i];
+            sum = Vector.plus(sum, p);
+        }
+        return Vector.times(1 / pos.length, sum);
+    };
+    /* Returns the center of mass of closest five circles to the circle
+     * argument. */
+    Game.prototype.momentClosestFive = function (c) {
+        var clstFivePos = [];
+        var botmFive = this.bottomFiveDistance(c);
+        for (var _i = 0, botmFive_1 = botmFive; _i < botmFive_1.length; _i++) {
+            var e = botmFive_1[_i];
+            clstFivePos.push(this.red.allRed[e[0]].pos);
+        }
+        return Game.moment(clstFivePos);
+    };
+    Game.prototype.behave = function () {
+        for (var _i = 0, _a = this.red.allRed; _i < _a.length; _i++) {
+            var r = _a[_i];
+            r.behave(this);
+        }
+    };
     return Game;
 }());
+/* HELPER FUNCTIONS
+ *
+ *     These are functions I use for conveniency and cause it makes me look cool
+ *     that I ask for help. */
+var min = function (arr) { return arr.reduce(function (a, b, i, arr) {
+    if (a !== undefined && b !== undefined)
+        return Math.min(a, b);
+    else
+        return a === undefined ? b : a;
+}); };
+var combin2 = function (arr) {
+    var combs = [];
+    for (var i = 0; i < arr.length; i++)
+        for (var j = i + 1; j < arr.length; j++)
+            if (i !== j) {
+                combs.push(arr[i], arr[j]);
+            }
+    return combs;
+};
+var zip = function (a1, a2) { return a1.map(function (x, i) { return [x, a2[i]]; }); };
+var combine = function (a) {
+    var fn = function (n, src, got, all) {
+        if (n == 0) {
+            if (got.length > 0) {
+                all[all.length] = got;
+            }
+            return;
+        }
+        for (var j = 0; j < src.length; j++) {
+            fn(n - 1, src.slice(j + 1), got.concat([src[j]]), all);
+        }
+        return;
+    };
+    var all = [];
+    for (var i = 0; i < a.length; i++) {
+        fn(i, a, [], all);
+    }
+    all.push(a);
+    return all;
+};
 // Circles are cool!
 var Circle = (function () {
     function Circle(radius, pos, vel, phys, color, bandColor, direction, speed, acc_value, turnRate, state, lastPosition // this is set in detectSitting()
@@ -83,9 +182,9 @@ var Circle = (function () {
         if (color === void 0) { color = 'Black'; }
         if (bandColor === void 0) { bandColor = 'Black'; }
         if (direction === void 0) { direction = 0; }
-        if (speed === void 0) { speed = 2.0; }
+        if (speed === void 0) { speed = 2.5; }
         if (acc_value === void 0) { acc_value = 200.0; }
-        if (turnRate === void 0) { turnRate = 0.1; }
+        if (turnRate === void 0) { turnRate = 0.07; }
         if (state === void 0) { state = new State(); }
         if (lastPosition === void 0) { lastPosition = new Vector(-1, -1); }
         this.radius = radius;
@@ -144,10 +243,12 @@ var Circle = (function () {
         this.vel = new Vector(this.vel.x + vel.x, this.vel.y + vel.y);
     };
     Circle.prototype.moveToPosition = function (pos) {
-        if (Vector.dist(this.pos, pos) > this.radius / 10) {
-            this.moveForwardByVel();
-        }
         this.turnToPosition(pos);
+        if (Vector.angleBetween(this.vel, Vector.minus(pos, this.pos)) < .07) {
+            if (Vector.dist(this.pos, pos) > .1 * this.radius) {
+                this.moveForwardByVel();
+            }
+        }
     };
     Circle.prototype.draw = function () {
         // Draw the Circle
@@ -357,53 +458,146 @@ var twitch = (function (_super) {
     return twitch;
 }(UnitEvent));
 /* These are to be the place to have all of the red circles and things */
-// var p: Promise<any> = (resolve, reject) => int {
-//     resolve('a string')
-// };
+var WanderCloselyBehavior = (function () {
+    function WanderCloselyBehavior() {
+        this.wanderRadius = 7;
+    }
+    // Timed constraint. If constrained, then just stay put, maybe make him
+    // randomly turn distances.
+    WanderCloselyBehavior.prototype.condition = function (rc, g) {
+        this.positionToMove = game.momentClosestFive(rc);
+        if (Vector.dist(this.positionToMove, rc.pos) > this.wanderRadius * rc.radius) {
+            this.shouldRunToGroup = true;
+        }
+        else {
+            this.shouldRunToGroup = false;
+            if (!this.shouldWander) {
+                this.willWander(rc);
+            }
+        }
+        return true;
+    };
+    // The circle is either far enough away to want to run towards the group, or
+    // the circle wanders around aimlessly.
+    WanderCloselyBehavior.prototype.consequence = function (rc) {
+        if (this.shouldRunToGroup)
+            this.runToGroup(rc);
+        else if (this.shouldWander > 0)
+            this.wander(rc);
+    };
+    WanderCloselyBehavior.prototype.runToGroup = function (rc) {
+        rc.moveToPosition(this.positionToMove);
+    };
+    WanderCloselyBehavior.prototype.wander = function (rc) {
+        rc.moveToPosition(this.wanderPosition);
+        this.shouldWander--;
+    };
+    WanderCloselyBehavior.prototype.willWander = function (rc) {
+        if (Math.random() < 0.1) {
+            this.shouldWander = 60;
+            this.wanderPosition =
+                Vector.plus(this.positionToMove, Vector.times(this.wanderRadius * Math.random() * rc.radius, Vector.random()));
+        }
+    };
+    return WanderCloselyBehavior;
+}());
+/* Move around the nearest circle clockwise, switching directions
+ * periodically. */
+var circleBehavior = (function () {
+    function circleBehavior() {
+    }
+    // Do the circling behavior always
+    circleBehavior.prototype.condition = function () {
+        return true;
+    };
+    // Move around the nearest circle clockwise, switching directions
+    // periodically.
+    circleBehavior.prototype.consequence = function () {
+        return;
+    };
+    return circleBehavior;
+}());
 // Red is the bad guys! Boo on them. They are a separate class because they are
 // going to have separate functions from the blue guys.
 var RedCircle = (function (_super) {
     __extends(RedCircle, _super);
-    function RedCircle() {
+    function RedCircle(id) {
+        var behavior = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            behavior[_i - 1] = arguments[_i];
+        }
         _super.call(this, 20, new Vector(200, 300));
+        this.wander = new WanderCloselyBehavior();
+        this.id = id;
         this.color = "Red";
         this.state = new State();
+        this.timeAlive = 0;
     }
+    RedCircle.prototype.increment = function () {
+        this.timeAlive++;
+    };
+    RedCircle.prototype.behave = function (g) {
+        this.wander.condition(this, g);
+        this.wander.consequence(this);
+    };
     return RedCircle;
 }(Circle));
 var Reds = (function () {
     function Reds(count) {
         this.count = count;
-        this.all = [];
+        this.allRed = [];
         for (var i = 0; i < this.count; i++) {
-            this.all.push(new RedCircle());
+            this.allRed.push(new RedCircle(i));
         }
     }
+    Reds.prototype.increment = function () {
+        for (var _i = 0, _a = this.allRed; _i < _a.length; _i++) {
+            var rc = _a[_i];
+            rc.timeAlive++;
+        }
+    };
     Reds.prototype.positionAll = function () {
         for (var i = 0; i < this.count; i++) {
-            this.all[i].move(12 + 20 * i, 12 + 20 * i);
+            this.allRed[i].move(330 + 20 * i, 250 + 20 * i);
         }
     };
     Reds.prototype.draw = function () {
         for (var i = 0; i < this.count; i++) {
-            this.all[i].draw();
+            this.allRed[i].draw();
         }
     };
     Reds.prototype.moveToPosition = function () {
         for (var i = 0; i < this.count; i++) {
-            this.all[i].moveToPosition(LASTCLICK);
+            this.allRed[i].moveToPosition(LASTCLICK);
         }
     };
     Reds.prototype.isThenClipping = function () {
-        for (var _i = 0, _a = this.all; _i < _a.length; _i++) {
+        for (var _i = 0, _a = this.allRed; _i < _a.length; _i++) {
             var r = _a[_i];
-            for (var _b = 0, _c = this.all; _b < _c.length; _b++) {
+            for (var _b = 0, _c = this.allRed; _b < _c.length; _b++) {
                 var or = _c[_b];
                 if (r !== or) {
                     Circle.isThenClipping(or, r);
                 }
             }
         }
+    };
+    Reds.prototype.distanceTable = function () {
+        var table = [];
+        for (var i = 0; i < this.count; i++) {
+            table[i] = [];
+            for (var j = 0; i < this.count; i++) {
+                table.push(Infinity);
+            }
+        }
+        for (var i = 0; i < this.count; i++) {
+            for (var j = 0; j < this.count; j++) {
+                if (i !== j) {
+                    table[i][j] = Vector.dist(this.allRed[i].pos, this.allRed[j].pos);
+                }
+            }
+        }
+        return table;
     };
     return Reds;
 }());
@@ -419,6 +613,11 @@ var Reds = (function () {
  * defend other specific pieces, or attack unrelentingly---so that the end goal
  * is one team winning over the other. */
 function start() {
+    game.frame++;
+    game.updateDistanceTable();
+    // console.log(
+    //     game.bottomFiveDistance(game.red.all[0]),
+    //     game.momentClosestFive(game.red.all[0]))
     clearScreen();
     game.collision();
     game.run();
@@ -429,7 +628,6 @@ var canvas = document.getElementById("gameCanvas");
 var ctx = canvas.getContext("2d");
 var LASTCLICK = new Vector(0, 0);
 canvas.onclick = function updateLastClick(event) {
-    console.log(event);
     var mPos = getMousePos(canvas, event);
     LASTCLICK = new Vector(mPos.x, mPos.y);
 };
@@ -441,7 +639,7 @@ function getMousePos(canvas, evt) {
     };
 }
 var game = new Game(7);
-game.spawnReds();
+game.spawnRed();
 start();
 // clears the screen, obvii
 function clearScreen() {
