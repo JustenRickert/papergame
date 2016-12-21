@@ -1,4 +1,5 @@
+// -*- mode:typescript -*-
+
 class Battle {
-    constructor(
-    ) { }
+    constructor() { }
 }

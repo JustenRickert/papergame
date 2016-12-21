@@ -1,3 +1,5 @@
+// -*-mode:typescript-*-
+
 /* With this class I'm using the sort of outline they have for disjoint set data
  * structures and operations. */
 
@@ -18,84 +20,118 @@
 
 interface Information {
     red: Reds;
+    blue: Blues;
     distanceRed: number[][];
 }
 
 class Game implements Information {
     public frame: number;
+    public gameCount: number;
 
     public red: Reds;
+    public blue: Blues;
     public distanceRed: number[][];
+    public distanceBlue: number[][];
 
-    constructor(redCount: number) {
-        this.red = new Reds(redCount)
+    constructor(redCount: number, blueCount: number) {
+        this.gameCount = redCount + blueCount;
+        this.red = new Reds(redCount, this.gameCount);
+        this.blue = new Blues(blueCount, this.gameCount);
+
     }
-    public run(): void {
+    public redBlueIsThenClipping = (): void => {
+        for (let r of this.red.all) { // r for red
+            for (let b of this.blue.all) { // b for blue
+                Circle.isThenClipping(r, b);
+            }
+        }
+    }
+    public run = (): void => {
         this.red.increment();
-        // this.red.moveToPosition();
+        this.blue.increment();
         this.behave();
     }
-    public draw(): void {
+    public draw = (): void => {
         this.red.draw();
+        this.blue.draw();
     }
-    public spawnRed(): void {
+    public spawnRed = (): void => {
         // spawns red dudes and then tells them what to do.
         this.red.positionAll();
     }
-    public collision(): void {
+    public spawnBlue = (): void => {
+        // spawns red dudes and then tells them what to do.
+        this.blue.positionAll();
+    }
+
+    public collision = (): void => {
         this.red.isThenClipping();
+        this.blue.isThenClipping();
+        this.redBlueIsThenClipping();
     }
     public updateDistanceTable(): void {
         this.distanceRed = this.red.distanceTable();
+        this.distanceBlue = this.blue.distanceTable();
     }
-    public bottomFiveDistance(r: RedCircle): any[] {
+    public bottomFiveDistance = (c: Circle, color: string): any[] => {
+        var distance = {
+            'Red': this.distanceRed[c.id],
+            'Blue': this.distanceBlue[c.id]
+        }[color];
         let id = [];
-        if (this.distanceRed[r.id].length < 5) {
-            for (let j in this.distanceRed[r.id]) {
+        if (distance.length < 5) {
+            for (let j in distance) {
                 id.push(j);
             }
-            return zip(id, this.distanceRed[r.id]);
+            return zip(id, distance);
         }
         let dist = [];
         for (let j = 0; j < 5; j++) {
             id.push(j)
-            dist.push(this.distanceRed[r.id][j]);
+            dist.push(distance[j]);
         }
         let smallest: number = dist.indexOf(min(dist));
-        for (let j = 5; j < this.distanceRed[r.id].length; j++) {
-            if (this.distanceRed[r.id][j] > dist[smallest]) {
-                dist[smallest] = this.distanceRed[r.id][j];
+        for (let j = 5; j < distance.length; j++) {
+            if (distance[j] > dist[smallest]) {
+                dist[smallest] = distance[j];
                 id[smallest] = j;
                 smallest = dist.indexOf(min(dist));
             }
         }
         return zip(id, dist);
     }
+    /* Returns the center of mass of closest five circles to the circle
+     * argument. */
+    public momentClosestFive = (c: Circle, color: string): Vector => {
+        let clstFivePos: Vector[] = [];
+        let botmFive: any[] = this.bottomFiveDistance(c, color);
+        for (let e of botmFive) {
+            var all = {
+                'Red': this.red.all,
+                'Blue': this.blue.all
+            }[color];
+            clstFivePos.push(all[e[0]].pos);
+        }
+        return Game.moment(clstFivePos);
+    }
+    public behave = (): void => {
+        for (let r of this.red.all) {
+            r.behave(r, this);
+        }
+        for (let b of this.blue.all) {
+            b.behave(b, this);
+        }
+    }
     /* Returns the center of mass. All of the circles have the same mass, so
      * it's a little silly to call it by that name (it is rather, the center of
      * all the points), but it's convenient anyways now that you know what I'm
      * talking about, hopefully. */
-    static moment(pos: Vector[]): Vector {
+    static moment = (pos: Vector[]): Vector => {
         let sum: Vector = new Vector(0, 0);
         for (let p of pos) {
             sum = Vector.plus(sum, p);
         }
         return Vector.times(1 / pos.length, sum)
-    }
-    /* Returns the center of mass of closest five circles to the circle
-     * argument. */
-    public momentClosestFive(c: RedCircle): Vector {
-        let clstFivePos: Vector[] = [];
-        let botmFive: any[] = this.bottomFiveDistance(c);
-        for (let e of botmFive) {
-            clstFivePos.push(this.red.allRed[e[0]].pos);
-        }
-        return Game.moment(clstFivePos);
-    }
-    public behave(): void {
-        for (let r of this.red.allRed) {
-            r.behave(this);
-        }
     }
 }
 
@@ -123,8 +159,8 @@ var combin2 = (arr: any[]) => {
 
 var zip = (a1, a2) => a1.map((x, i) => [x, a2[i]])
 
-var combine = function(a) {
-    var fn = function(n, src, got, all) {
+var combine = (a) => {
+    var fn = (n, src, got, all) => {
         if (n == 0) {
             if (got.length > 0) {
                 all[all.length] = got;

@@ -17,7 +17,10 @@ function start() {
     // console.log(
     //     game.bottomFiveDistance(game.red.all[0]),
     //     game.momentClosestFive(game.red.all[0]))
-    clearScreen();
+    clearScreen(); // TODO: There is better way to do this, clearing the screen
+    // is pretty intensive, apparently. Also, the circles and
+    // things don't need to be drawn every frame. They can just
+    // moved around, but that should be easy to do later.
     game.collision();
     game.run();
     game.draw();
@@ -28,13 +31,14 @@ function start() {
 var canvas: any = document.getElementById("gameCanvas");
 var ctx = canvas.getContext("2d");
 
-var LASTCLICK = new Vector(0, 0);
+var LASTCLICK = Vector.random();
+// How can I write this one with the fat arrow?
 canvas.onclick = function updateLastClick(event) {
     var mPos = getMousePos(canvas, event)
     LASTCLICK = new Vector(mPos.x, mPos.y);
 };
 
-function getMousePos(canvas, evt) {
+var getMousePos = (canvas, evt) => {
     var rect = canvas.getBoundingClientRect();
     return {
         x: evt.clientX - rect.left,
@@ -42,7 +46,7 @@ function getMousePos(canvas, evt) {
     };
 }
 
-var game = new Game(7);
+var game = new Game(10, 14);
 game.spawnRed();
 start();
 
@@ -56,13 +60,3 @@ function clearScreen() {
     // ctx.width, ctx.height);
 }
 
-// Blue is the good guys, but maybe add user changeable colors or something.
-class BlueCircle extends Circle {
-    constructor() {
-        super(35, new Vector(500, 800))
-        this.color = "Blue";
-    }
-    public follow(cir: Vector): void {
-        this.moveToPosition(cir);
-    }
-}

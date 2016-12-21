@@ -6,6 +6,8 @@ class BlueCircle extends Circle {
     public behaviors: Behavior[];
     public wander: Behavior = new WanderCloselyBehavior(); // Default behavior
 
+    public life = new Life(5);
+
     constructor(id: number, ...behaviors: Behavior[]) {
         super(id, 20, new Vector(200, 300))
         this.behaviors = behaviors;
@@ -13,10 +15,10 @@ class BlueCircle extends Circle {
         this.color = "Blue";
         this.timeAlive = 0
     }
-    public increment() {
+    public increment = (): void => {
         this.timeAlive++
     }
-    public behave(c: Circle, g: Game): void {
+    public behave = (c: Circle, g: Game): void => {
         for (let bhvr of this.behaviors) {
             if (bhvr.condition(c, g)) {
                 bhvr.consequence(c);
@@ -45,27 +47,27 @@ class Blues {
         gameCount += count
     }
 
-    public increment() {
+    public increment = (): void => {
         for (let rc of this.all)
             rc.timeAlive++
     }
-    public positionAll(): void {
+    public positionAll = (): void => {
         for (var i = 0; i < this.count; i++) {
             this.all[i].position(500 + 20 * i, 250);
             // this.all[i].move(322 + 20 * i, 322 + 20 * i)
         }
     }
-    public draw(): void {
+    public draw = (): void => {
         for (var i = 0; i < this.count; i++) {
             this.all[i].draw();
         }
     }
-    public moveToPosition(): void {
+    public moveToPosition = (v: Vector): void => {
         for (var i = 0; i < this.count; i++) {
-            this.all[i].moveToPosition(LASTCLICK);
+            this.all[i].moveToPosition(v);
         }
     }
-    public isThenClipping(): void {
+    public isThenClipping = (): void => {
         for (let r of this.all) { // r for red
             for (let or of this.all) { // or for other red
                 if (r !== or) {
@@ -74,7 +76,7 @@ class Blues {
             }
         }
     }
-    public distanceTable(): number[][] {
+    public distanceTable = (): number[][] => {
         var table: any[] = [];
         for (let i = 0; i < this.count; i++) {
             table[i] = []

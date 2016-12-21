@@ -1,3 +1,5 @@
+// -*- mode:typescript -*-
+
 class Vector {
     constructor(
         public x: number,
@@ -41,7 +43,7 @@ class Vector {
         if (angle === 0) {
             return 0
         } else {
-            return angle > 0 ? -1 : 1;
+           return angle > 0 ? -1 : 1;
         }
     }
     static random(): Vector {

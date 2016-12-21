@@ -1,9 +1,12 @@
 {
     "files": [
+        "life.tsx",
         "vector.tsx",
         "game.tsx",
         "circle.tsx",
         "reds.tsx",
+        "blues.tsx",
+        "behavior.tsx",
         "main.tsx"
     ]
 }

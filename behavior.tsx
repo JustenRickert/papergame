@@ -1,3 +1,4 @@
+// -*- mode:typescript -*-
 
 /* IDEA
      Okay. I was reading this thing
@@ -32,11 +33,14 @@ class WanderCloselyBehavior implements Behavior {
     private shouldRunToGroup: boolean;
     private shouldWander: number = 60;
     private positionToMove: Vector;
-    private wanderPosition: Vector = new Vector(0, 0);
+    private wanderPosition: Vector;
     private wanderRadius: number = 7;
 
     constructor() {
+        this.positionToMove = Vector.times(640, Vector.random());
+        this.wanderPosition = Vector.times(640, Vector.random());
     }
+
     private outOfBoundCheck(c: Circle) {
         if (this.positionToMove.x < 4 * c.radius ||
             this.positionToMove.x > canvas.width - 4 * c.radius ||

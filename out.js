@@ -3,6 +3,37 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
+// -*- mode:typescript -*-
+var Life = (function () {
+    function Life(maxHealth) {
+        this.maxHealth = maxHealth;
+    }
+    Life.prototype.damage = function (d) {
+        if (this.health - d < 0)
+            this.health = 0;
+        else
+            this.health -= d;
+    };
+    Life.prototype.heal = function (h) {
+        if (this.health + h < this.maxHealth)
+            this.health += h;
+        else
+            this.health = this.maxHealth;
+    };
+    return Life;
+}());
+var BasicAttack = (function () {
+    function BasicAttack(d) {
+        this.damage = d;
+    }
+    return BasicAttack;
+}());
+var Effect = (function () {
+    function Effect() {
+    }
+    return Effect;
+}());
+// -*- mode:typescript -*-
 var Vector = (function () {
     function Vector(x, y) {
         this.x = x;
@@ -55,52 +86,100 @@ var Vector = (function () {
     };
     return Vector;
 }());
-/* With this class I'm using the sort of outline they have for disjoint set data
- * structures and operations. */
+// -*-mode:typescript-*-
 var Game = (function () {
-    function Game(redCount) {
-        this.red = new Reds(redCount);
+    function Game(redCount, blueCount) {
+        var _this = this;
+        this.redBlueIsThenClipping = function () {
+            for (var _i = 0, _a = _this.red.all; _i < _a.length; _i++) {
+                var r = _a[_i];
+                for (var _b = 0, _c = _this.blue.all; _b < _c.length; _b++) {
+                    var b = _c[_b];
+                    Circle.isThenClipping(r, b);
+                }
+            }
+        };
+        this.run = function () {
+            _this.red.increment();
+            _this.blue.increment();
+            _this.behave();
+        };
+        this.draw = function () {
+            _this.red.draw();
+            _this.blue.draw();
+        };
+        this.spawnRed = function () {
+            // spawns red dudes and then tells them what to do.
+            _this.red.positionAll();
+        };
+        this.spawnBlue = function () {
+            // spawns red dudes and then tells them what to do.
+            _this.blue.positionAll();
+        };
+        this.collision = function () {
+            _this.red.isThenClipping();
+            _this.blue.isThenClipping();
+            _this.redBlueIsThenClipping();
+        };
+        this.bottomFiveDistance = function (c, color) {
+            var distance = {
+                'Red': _this.distanceRed[c.id],
+                'Blue': _this.distanceBlue[c.id]
+            }[color];
+            var id = [];
+            if (distance.length < 5) {
+                for (var j in distance) {
+                    id.push(j);
+                }
+                return zip(id, distance);
+            }
+            var dist = [];
+            for (var j = 0; j < 5; j++) {
+                id.push(j);
+                dist.push(distance[j]);
+            }
+            var smallest = dist.indexOf(min(dist));
+            for (var j = 5; j < distance.length; j++) {
+                if (distance[j] > dist[smallest]) {
+                    dist[smallest] = distance[j];
+                    id[smallest] = j;
+                    smallest = dist.indexOf(min(dist));
+                }
+            }
+            return zip(id, dist);
+        };
+        /* Returns the center of mass of closest five circles to the circle
+         * argument. */
+        this.momentClosestFive = function (c, color) {
+            var clstFivePos = [];
+            var botmFive = _this.bottomFiveDistance(c, color);
+            for (var _i = 0, botmFive_1 = botmFive; _i < botmFive_1.length; _i++) {
+                var e = botmFive_1[_i];
+                var all = {
+                    'Red': _this.red.all,
+                    'Blue': _this.blue.all
+                }[color];
+                clstFivePos.push(all[e[0]].pos);
+            }
+            return Game.moment(clstFivePos);
+        };
+        this.behave = function () {
+            for (var _i = 0, _a = _this.red.all; _i < _a.length; _i++) {
+                var r = _a[_i];
+                r.behave(r, _this);
+            }
+            for (var _b = 0, _c = _this.blue.all; _b < _c.length; _b++) {
+                var b = _c[_b];
+                b.behave(b, _this);
+            }
+        };
+        this.gameCount = redCount + blueCount;
+        this.red = new Reds(redCount, this.gameCount);
+        this.blue = new Blues(blueCount, this.gameCount);
     }
-    Game.prototype.run = function () {
-        this.red.increment();
-        // this.red.moveToPosition();
-        this.behave();
-    };
-    Game.prototype.draw = function () {
-        this.red.draw();
-    };
-    Game.prototype.spawnRed = function () {
-        // spawns red dudes and then tells them what to do.
-        this.red.positionAll();
-    };
-    Game.prototype.collision = function () {
-        this.red.isThenClipping();
-    };
     Game.prototype.updateDistanceTable = function () {
         this.distanceRed = this.red.distanceTable();
-    };
-    Game.prototype.bottomFiveDistance = function (r) {
-        var id = [];
-        if (this.distanceRed[r.id].length < 5) {
-            for (var j in this.distanceRed[r.id]) {
-                id.push(j);
-            }
-            return zip(id, this.distanceRed[r.id]);
-        }
-        var dist = [];
-        for (var j = 0; j < 5; j++) {
-            id.push(j);
-            dist.push(this.distanceRed[r.id][j]);
-        }
-        var smallest = dist.indexOf(min(dist));
-        for (var j = 5; j < this.distanceRed[r.id].length; j++) {
-            if (this.distanceRed[r.id][j] > dist[smallest]) {
-                dist[smallest] = this.distanceRed[r.id][j];
-                id[smallest] = j;
-                smallest = dist.indexOf(min(dist));
-            }
-        }
-        return zip(id, dist);
+        this.distanceBlue = this.blue.distanceTable();
     };
     /* Returns the center of mass. All of the circles have the same mass, so
      * it's a little silly to call it by that name (it is rather, the center of
@@ -113,23 +192,6 @@ var Game = (function () {
             sum = Vector.plus(sum, p);
         }
         return Vector.times(1 / pos.length, sum);
-    };
-    /* Returns the center of mass of closest five circles to the circle
-     * argument. */
-    Game.prototype.momentClosestFive = function (c) {
-        var clstFivePos = [];
-        var botmFive = this.bottomFiveDistance(c);
-        for (var _i = 0, botmFive_1 = botmFive; _i < botmFive_1.length; _i++) {
-            var e = botmFive_1[_i];
-            clstFivePos.push(this.red.allRed[e[0]].pos);
-        }
-        return Game.moment(clstFivePos);
-    };
-    Game.prototype.behave = function () {
-        for (var _i = 0, _a = this.red.allRed; _i < _a.length; _i++) {
-            var r = _a[_i];
-            r.behave(this);
-        }
     };
     return Game;
 }());
@@ -175,139 +237,92 @@ var combine = function (a) {
 };
 // Circles are cool!
 var Circle = (function () {
-    function Circle(radius, pos, vel, phys, color, bandColor, direction, speed, acc_value, turnRate, state, lastPosition // this is set in detectSitting()
-        ) {
-        if (vel === void 0) { vel = new Vector(0, 0); }
-        if (phys === void 0) { phys = new Physics(new Force(Math.PI * radius, new Vector(0, 0)), new Momentum(Math.PI * radius, new Vector(0, 0))); }
+    function Circle(id, radius, pos, vel, color, bandColor, direction, speed, turnRate) {
+        var _this = this;
+        if (vel === void 0) { vel = Vector.random(); }
         if (color === void 0) { color = 'Black'; }
         if (bandColor === void 0) { bandColor = 'Black'; }
-        if (direction === void 0) { direction = 0; }
+        if (direction === void 0) { direction = 4 * Math.PI * Math.random() - 2 * Math.PI; }
         if (speed === void 0) { speed = 2.5; }
-        if (acc_value === void 0) { acc_value = 200.0; }
         if (turnRate === void 0) { turnRate = 0.07; }
-        if (state === void 0) { state = new State(); }
-        if (lastPosition === void 0) { lastPosition = new Vector(-1, -1); }
+        this.id = id;
         this.radius = radius;
         this.pos = pos;
         this.vel = vel;
-        this.phys = phys;
         this.color = color;
         this.bandColor = bandColor;
         this.direction = direction;
         this.speed = speed;
-        this.acc_value = acc_value;
         this.turnRate = turnRate;
-        this.state = state;
-        this.lastPosition = lastPosition;
         this.clippingForce = 0.011;
-    }
-    Circle.prototype.detectSitting = function () {
-        if (Vector.dist(this.pos, this.lastPosition) <= .1) {
-            State.sittingOn(this.state);
-        }
-        else {
-            State.sittingOff(this.state);
-        }
-        this.lastPosition = this.pos;
-    };
-    Circle.prototype.move = function (new_x, new_y) {
-        this.pos = new Vector(new_x, new_y);
-    };
-    Circle.prototype.moveForwardByVel = function () {
-        this.pos = new Vector(this.pos.x + this.speed * this.vel.x, this.pos.y + this.speed * this.vel.y);
-    };
-    Circle.prototype.moveForwardByVec = function (vec) {
-        this.pos = Vector.plus(this.pos, vec);
-    };
-    Circle.prototype.adjustVelocityToDirection = function () {
-        this.setVel(new Vector(Math.sin(this.direction), Math.cos(this.direction)));
-    };
-    Circle.prototype.turn = function (delta) {
-        /* a positive value indicates turning clockwise,  */
-        this.direction = Math.abs(this.direction + delta) >= 2 * Math.PI ?
-            (this.direction + delta) % Math.PI : this.direction + delta;
-        this.adjustVelocityToDirection();
-    };
-    Circle.prototype.turnToPosition = function (pos) {
-        if (Math.abs(Vector.angleBetween(this.vel, Vector.minus(pos, this.pos))) > 0.07) {
-            this.turn(this.turnRate * Vector.directionTo(this.vel, Vector.minus(pos, this.pos)));
-        }
-    };
-    Circle.prototype.setSpeed = function (spd) {
-        this.speed = spd;
-    };
-    Circle.prototype.setVel = function (vel) {
-        this.vel = new Vector(vel.x, vel.y);
-    };
-    Circle.prototype.addVel = function (vel) {
-        this.vel = new Vector(this.vel.x + vel.x, this.vel.y + vel.y);
-    };
-    Circle.prototype.moveToPosition = function (pos) {
-        this.turnToPosition(pos);
-        if (Vector.angleBetween(this.vel, Vector.minus(pos, this.pos)) < .07) {
-            if (Vector.dist(this.pos, pos) > .1 * this.radius) {
-                this.moveForwardByVel();
+        this.position = function (new_x, new_y) {
+            _this.pos = new Vector(new_x, new_y);
+        };
+        this.moveForwardByVel = function () {
+            _this.pos = new Vector(_this.pos.x + _this.speed * _this.vel.x, _this.pos.y + _this.speed * _this.vel.y);
+        };
+        this.moveForwardByVec = function (vec) {
+            _this.pos = Vector.plus(_this.pos, vec);
+        };
+        this.adjustVelocityToDirection = function () {
+            _this.setVel(new Vector(Math.sin(_this.direction), Math.cos(_this.direction)));
+        };
+        this.turn = function (delta) {
+            /* a positive value indicates turning clockwise,  */
+            _this.direction = Math.abs(_this.direction + delta) >= 2 * Math.PI ?
+                (_this.direction + delta) % Math.PI : _this.direction + delta;
+            _this.adjustVelocityToDirection();
+        };
+        this.turnToPosition = function (pos) {
+            if (Math.abs(Vector.angleBetween(_this.vel, Vector.minus(pos, _this.pos))) > 0.07) {
+                _this.turn(_this.turnRate * Vector.directionTo(_this.vel, Vector.minus(pos, _this.pos)));
             }
-        }
-    };
-    Circle.prototype.draw = function () {
-        // Draw the Circle
-        ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
-        ctx.closePath();
-        // color in the circle
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        // Draw the triangle at this.direction at half radius. I think I'm going
-        // to make all projectiles squares. Triangles could be designated as
-        // structures.
-        ctx.beginPath();
-        // forward point
-        ctx.moveTo(this.pos.x + (3 * this.radius / 4) * Math.sin(this.direction), this.pos.y + (3 * this.radius / 4) * Math.cos(this.direction));
-        // point to the left (or right, I dunno and it doesn't matter)
-        ctx.lineTo(this.pos.x + (2 * this.radius / 4) * Math.sin(this.direction + Math.PI / 3), this.pos.y + (2 * this.radius / 4) * Math.cos(this.direction + Math.PI / 3));
-        ctx.lineTo(this.pos.x + (2 * this.radius / 4) * Math.sin(this.direction - Math.PI / 3), this.pos.y + (2 * this.radius / 4) * Math.cos(this.direction - Math.PI / 3));
-        // color it in
-        ctx.fillStyle = this.bandColor;
-        ctx.fill();
-        ctx.closePath();
-    };
-    Circle.prototype.setColliding = function () {
-        this.state.colliding = true;
-    };
-    Circle.prototype.unsetColliding = function () {
-        this.state.colliding = false;
-        this.phys.force.vect = new Vector(0, 0);
-    };
-    Circle.prototype.lateralForceLeft = function () {
-        this.phys.force.vect.x = this.acc_value * this.vel.y;
-        this.phys.force.vect.y = this.acc_value * -this.vel.x;
-    };
-    Circle.prototype.lateralForceRight = function () {
-        this.phys.force.vect.x = this.acc_value * this.vel.y;
-        this.phys.force.vect.y = this.acc_value * -this.vel.x;
-    };
-    // A lateral movement increases the overall speed of the circle, but it
-    // doesn't decrease the time it will take to get to the target. That's so
-    // fucking interesting!
-    Circle.lateralMoveRight = function (c) {
-        c.pos = new Vector(c.pos.x - c.vel.y, c.pos.y + c.vel.x);
-    };
-    Circle.lateralMoveLeft = function (c) {
-        c.pos = new Vector(c.pos.x + c.vel.y, c.pos.y - c.vel.x);
-    };
-    Circle.lateralForceLeft = function (c) {
-        c.phys.force.vect.x = c.vel.y;
-        c.phys.force.vect.y = -c.vel.x;
-    };
-    Circle.lateralForceRight = function (c) {
-        c.phys.force.vect.x = -c.vel.y;
-        c.phys.force.vect.y = c.vel.x;
-    };
-    Circle.prototype.moveMomentumVector = function () {
-    };
+        };
+        this.setSpeed = function (spd) {
+            _this.speed = spd;
+        };
+        this.setVel = function (vel) {
+            _this.vel = new Vector(vel.x, vel.y);
+        };
+        this.addVel = function (vel) {
+            _this.vel = new Vector(_this.vel.x + vel.x, _this.vel.y + vel.y);
+        };
+        this.moveToPosition = function (pos) {
+            _this.turnToPosition(pos);
+            if (Vector.angleBetween(_this.vel, Vector.minus(pos, _this.pos)) < .07) {
+                if (Vector.dist(_this.pos, pos) > .1 * _this.radius) {
+                    _this.moveForwardByVel();
+                }
+            }
+        };
+        this.draw = function () {
+            // Draw the Circle
+            ctx.beginPath();
+            ctx.arc(_this.pos.x, _this.pos.y, _this.radius, 0, 2 * Math.PI);
+            ctx.closePath();
+            // color in the circle
+            ctx.fillStyle = _this.color;
+            ctx.fill();
+            // Draw the triangle at this.direction at half radius. I think I'm going
+            // to make all projectiles squares. Triangles could be designated as
+            // structures.
+            ctx.beginPath();
+            // forward point
+            ctx.moveTo(_this.pos.x + (3 * _this.radius / 4) * Math.sin(_this.direction), _this.pos.y + (3 * _this.radius / 4) * Math.cos(_this.direction));
+            // point to the left (or right, I dunno and it doesn't matter)
+            ctx.lineTo(_this.pos.x + (2 * _this.radius / 4) * Math.sin(_this.direction + Math.PI / 3), _this.pos.y + (2 * _this.radius / 4) * Math.cos(_this.direction + Math.PI / 3));
+            ctx.lineTo(_this.pos.x + (2 * _this.radius / 4) * Math.sin(_this.direction - Math.PI / 3), _this.pos.y + (2 * _this.radius / 4) * Math.cos(_this.direction - Math.PI / 3));
+            // color it in
+            ctx.fillStyle = _this.bandColor;
+            ctx.fill();
+            ctx.closePath();
+        };
+        // if (!this.direction)
+        // this.vel = Vector.random();
+        // this.direction = 4 * Math.PI * Math.random() - 2 * Math.PI;
+    }
     Circle.isThenClipping = function (c1, c2) {
-        if (Circle.isColliding(c1, c2)) {
+        if (Circle.isClipping(c1, c2)) {
             Circle.clippingPush(c1, c2);
         }
     };
@@ -325,183 +340,282 @@ var Circle = (function () {
     };
     // These static methods need to be in Circle, and not Vector, because they
     // need access to Circle.radius and other attributes.
-    Circle.isColliding = function (c1, c2) {
+    Circle.isClipping = function (c1, c2) {
         return Vector.dist(c1.pos, c2.pos) < c1.radius + c2.radius;
-    };
-    Circle.applyForce = function (c1, c2) {
-        if (this.isColliding(c1, c2)) {
-            var diff = Vector.dist(c1.pos, c2.pos) - c1.radius - c2.radius;
-            var dirTo = Vector.minus(c1.pos, c2.pos);
-            c1.phys.force.vect = Vector.times(-diff, dirTo);
-            c2.phys.force.vect = Vector.times(diff, dirTo);
-        }
-    };
-    Circle.prototype.impulse = function () {
-        this.phys.momen.vect = Vector.plus(this.phys.momen.vect, this.phys.force.vect);
-    };
-    Circle.prototype.moveByMomentum = function () {
-        this.moveForwardByVec(Vector.times(0.001, this.phys.momen.vect));
-    };
-    Circle.prototype.frictionMomentum = function (coeff) {
-        /* coeff should be in (0,1) that's non-inclusive */
-        this.phys.momen.vect = Vector.times(coeff, this.phys.momen.vect);
     };
     return Circle;
 }());
-var State = (function () {
-    function State() {
-        this.movement = true;
-        this.turn = true;
-        this.colliding = false;
-        this.cqc = false;
-        this.sitting = true;
+// -*- mode:typescript -*-
+/* These are to be the place to have all of the red circles and things */
+/* RedCircle is going to be the base class for all friendly circles. The default
+ * behavior of red circles will be to wander closely to the nearest five
+ * friendly units. Otherwise, this circle is just fucking bag of meat awaiting
+ * death. */
+var RedCircle = (function (_super) {
+    __extends(RedCircle, _super);
+    function RedCircle(id) {
+        var behaviors = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            behaviors[_i - 1] = arguments[_i];
+        }
+        _super.call(this, id, 20, new Vector(200, 300));
+        this.wander = new WanderCloselyBehavior(); // Default behavior
+        this.life = new Life(5);
+        this.behaviors = behaviors;
+        this.id = id;
+        this.color = "Red";
+        this.timeAlive = 0;
     }
-    State.sittingOn = function (st) {
-        st.sitting = true;
+    RedCircle.prototype.increment = function () {
+        this.timeAlive++;
     };
-    State.sittingOff = function (st) {
-        st.sitting = false;
-    };
-    return State;
-}());
-/* FORCE AND MOMENTUM
- *   I need force and momentum so I can do the physical interactions between the
- * circles. */
-var Force = (function () {
-    function Force(mass, vect) {
-        this.mass = mass;
-        this.vect = vect;
-    }
-    return Force;
-}());
-var Momentum = (function () {
-    function Momentum(mass, vect) {
-        this.mass = mass;
-        this.vect = vect;
-    }
-    Momentum.prototype.vector = function () {
-        return new Vector(this.mass * this.vect.x, this.mass * this.vect.y);
-    };
-    return Momentum;
-}());
-var Physics = (function () {
-    function Physics(force, momen) {
-        this.force = force;
-        this.momen = momen;
-    }
-    return Physics;
-}());
-/* TIMED ACTION */
-var UnitEvent = (function () {
-    function UnitEvent(circle, affect, count, lastTrigger) {
-        this.circle = circle;
-        this.affect = affect;
-        this.count = count;
-        this.lastTrigger = lastTrigger;
-    }
-    UnitEvent.prototype.decrement = function () {
-        this.count -= 1;
-    };
-    return UnitEvent;
-}());
-var SideStep = (function (_super) {
-    __extends(SideStep, _super);
-    function SideStep(circle, stepping, direction) {
-        if (stepping === void 0) { stepping = 3; }
-        if (direction === void 0) { direction = 'left'; }
-        _super.call(this, circle, 'sideStep', 30);
-        this.circle = circle;
-        this.stepping = stepping;
-        this.direction = direction;
-    }
-    SideStep.prototype.decrementStepping = function () {
-        this.stepping -= 1;
-    };
-    SideStep.prototype.onZero = function () {
-        this.decrementStepping();
-        if (this.stepping > 0) {
-            if (this.direction === 'left') {
-                this.circle.lateralForceRight();
-            }
-            else if (this.direction === 'right') {
-                this.circle.lateralForceLeft();
-            }
-            if (!this.circle.state.sitting) {
-                if (this.direction === 'left') {
-                    this.direction = 'right';
-                }
-                else {
-                    this.direction = 'left';
-                }
-                this.count = 30;
+    RedCircle.prototype.behave = function (c, g) {
+        for (var _i = 0, _a = this.behaviors; _i < _a.length; _i++) {
+            var bhvr = _a[_i];
+            if (bhvr.condition(c, g)) {
+                bhvr.consequence(c);
                 return;
             }
-            this.circle.impulse();
-            this.circle.moveByMomentum();
         }
-        else if (this.direction === 'left') {
-            this.stepping = 3;
-            this.direction = 'right';
-        }
-        else {
-            this.direction = 'left';
-            this.count = 30;
+        if (this.wander.condition(c, g)) {
+            this.wander.consequence(c);
+            return;
         }
     };
-    return SideStep;
-}(UnitEvent));
-var twitch = (function (_super) {
-    __extends(twitch, _super);
-    function twitch() {
-        _super.apply(this, arguments);
+    return RedCircle;
+}(Circle));
+var Reds = (function () {
+    function Reds(count, gameCount) {
+        var _this = this;
+        this.increment = function () {
+            for (var _i = 0, _a = _this.all; _i < _a.length; _i++) {
+                var rc = _a[_i];
+                rc.timeAlive++;
+            }
+        };
+        this.positionAll = function () {
+            for (var i = 0; i < _this.count; i++) {
+                _this.all[i].position(330 + 20 * i, 250 + 20 * i);
+            }
+        };
+        this.draw = function () {
+            for (var i = 0; i < _this.count; i++) {
+                _this.all[i].draw();
+            }
+        };
+        this.moveToPosition = function (v) {
+            for (var i = 0; i < _this.count; i++) {
+                _this.all[i].moveToPosition(v);
+            }
+        };
+        this.isThenClipping = function () {
+            for (var _i = 0, _a = _this.all; _i < _a.length; _i++) {
+                var r = _a[_i];
+                for (var _b = 0, _c = _this.all; _b < _c.length; _b++) {
+                    var or = _c[_b];
+                    if (r !== or) {
+                        Circle.isThenClipping(or, r);
+                    }
+                }
+            }
+        };
+        this.distanceTable = function () {
+            var table = [];
+            for (var i = 0; i < _this.count; i++) {
+                table[i] = [];
+                for (var j = 0; i < _this.count; i++) {
+                    table.push(Infinity);
+                }
+            }
+            for (var i = 0; i < _this.count; i++) {
+                for (var j = 0; j < _this.count; j++) {
+                    if (i !== j) {
+                        table[i][j] = Vector.dist(_this.all[i].pos, _this.all[j].pos);
+                    }
+                }
+            }
+            return table;
+        };
+        this.count = count;
+        this.all = [];
+        for (var i = 0; i < count; i++) {
+            this.all.push(new RedCircle(i));
+        }
+        gameCount += count;
     }
-    return twitch;
-}(UnitEvent));
-/* These are to be the place to have all of the red circles and things */
+    return Reds;
+}());
+// -*- mode:typescript -*-
+var BlueCircle = (function (_super) {
+    __extends(BlueCircle, _super);
+    function BlueCircle(id) {
+        var _this = this;
+        var behaviors = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            behaviors[_i - 1] = arguments[_i];
+        }
+        _super.call(this, id, 20, new Vector(200, 300));
+        this.wander = new WanderCloselyBehavior(); // Default behavior
+        this.life = new Life(5);
+        this.increment = function () {
+            _this.timeAlive++;
+        };
+        this.behave = function (c, g) {
+            for (var _i = 0, _a = _this.behaviors; _i < _a.length; _i++) {
+                var bhvr = _a[_i];
+                if (bhvr.condition(c, g)) {
+                    bhvr.consequence(c);
+                    return;
+                }
+            }
+            if (_this.wander.condition(c, g)) {
+                _this.wander.consequence(c);
+                return;
+            }
+        };
+        this.behaviors = behaviors;
+        this.id = id;
+        this.color = "Blue";
+        this.timeAlive = 0;
+    }
+    return BlueCircle;
+}(Circle));
+var Blues = (function () {
+    function Blues(count, gameCount) {
+        var _this = this;
+        this.increment = function () {
+            for (var _i = 0, _a = _this.all; _i < _a.length; _i++) {
+                var rc = _a[_i];
+                rc.timeAlive++;
+            }
+        };
+        this.positionAll = function () {
+            for (var i = 0; i < _this.count; i++) {
+                _this.all[i].position(500 + 20 * i, 250);
+            }
+        };
+        this.draw = function () {
+            for (var i = 0; i < _this.count; i++) {
+                _this.all[i].draw();
+            }
+        };
+        this.moveToPosition = function (v) {
+            for (var i = 0; i < _this.count; i++) {
+                _this.all[i].moveToPosition(v);
+            }
+        };
+        this.isThenClipping = function () {
+            for (var _i = 0, _a = _this.all; _i < _a.length; _i++) {
+                var r = _a[_i];
+                for (var _b = 0, _c = _this.all; _b < _c.length; _b++) {
+                    var or = _c[_b];
+                    if (r !== or) {
+                        Circle.isThenClipping(or, r);
+                    }
+                }
+            }
+        };
+        this.distanceTable = function () {
+            var table = [];
+            for (var i = 0; i < _this.count; i++) {
+                table[i] = [];
+                for (var j = 0; i < _this.count; i++) {
+                    table.push(Infinity);
+                }
+            }
+            for (var i = 0; i < _this.count; i++) {
+                for (var j = 0; j < _this.count; j++) {
+                    if (i !== j) {
+                        table[i][j] = Vector.dist(_this.all[i].pos, _this.all[j].pos);
+                    }
+                }
+            }
+            return table;
+        };
+        this.count = count;
+        this.all = [];
+        for (var i = 0; i < count; i++) {
+            this.all.push(new BlueCircle(i));
+        }
+        gameCount += count;
+    }
+    return Blues;
+}());
+// -*- mode:typescript -*-
+var AttackBehavior = (function () {
+    function AttackBehavior() {
+    }
+    AttackBehavior.prototype.condition = function (c, g) {
+        return false;
+    };
+    AttackBehavior.prototype.consequence = function (c) {
+    };
+    return AttackBehavior;
+}());
+/* Ugh. So this took a lot more work than I thought that it would take. Maybe
+ * there's an easier way to go about this. I think this will work a lot better
+ * in conjunction with other behaviors. I want this behavior to be the default
+ * behavior for circles. */
 var WanderCloselyBehavior = (function () {
     function WanderCloselyBehavior() {
+        this.shouldWander = 60;
         this.wanderRadius = 7;
+        this.positionToMove = Vector.times(640, Vector.random());
+        this.wanderPosition = Vector.times(640, Vector.random());
     }
+    WanderCloselyBehavior.prototype.outOfBoundCheck = function (c) {
+        if (this.positionToMove.x < 4 * c.radius ||
+            this.positionToMove.x > canvas.width - 4 * c.radius ||
+            this.positionToMove.y < 4 * c.radius ||
+            this.positionToMove.y > canvas.height - 4 * c.radius) {
+            return true;
+        }
+        else
+            return false;
+    };
     // Timed constraint. If constrained, then just stay put, maybe make him
     // randomly turn distances.
-    WanderCloselyBehavior.prototype.condition = function (rc, g) {
-        this.positionToMove = game.momentClosestFive(rc);
-        if (Vector.dist(this.positionToMove, rc.pos) > this.wanderRadius * rc.radius) {
+    WanderCloselyBehavior.prototype.condition = function (c, g) {
+        this.positionToMove = game.momentClosestFive(c, c.color);
+        if (Vector.dist(this.positionToMove, c.pos) > this.wanderRadius * c.radius) {
             this.shouldRunToGroup = true;
         }
         else {
             this.shouldRunToGroup = false;
-            if (!this.shouldWander) {
-                this.willWander(rc);
+            if (this.shouldWander < 0) {
+                this.willWander(c);
             }
         }
         return true;
     };
     // The circle is either far enough away to want to run towards the group, or
     // the circle wanders around aimlessly.
-    WanderCloselyBehavior.prototype.consequence = function (rc) {
+    WanderCloselyBehavior.prototype.consequence = function (c) {
+        if (this.outOfBoundCheck(c))
+            c.moveToPosition(new Vector(320, 320));
         if (this.shouldRunToGroup)
-            this.runToGroup(rc);
-        else if (this.shouldWander > 0)
-            this.wander(rc);
+            this.runToGroup(c);
+        else if (this.shouldWander >= 0) {
+            this.wander(c);
+            this.shouldWander--;
+        }
     };
-    WanderCloselyBehavior.prototype.runToGroup = function (rc) {
-        rc.moveToPosition(this.positionToMove);
+    WanderCloselyBehavior.prototype.runToGroup = function (c) {
+        c.moveToPosition(this.positionToMove);
     };
-    WanderCloselyBehavior.prototype.wander = function (rc) {
-        rc.moveToPosition(this.wanderPosition);
-        this.shouldWander--;
+    WanderCloselyBehavior.prototype.wander = function (c) {
+        c.moveToPosition(this.wanderPosition);
     };
-    WanderCloselyBehavior.prototype.willWander = function (rc) {
-        if (Math.random() < 0.1) {
+    WanderCloselyBehavior.prototype.willWander = function (c) {
+        if (Math.random() < 0.001) {
             this.shouldWander = 60;
             this.wanderPosition =
-                Vector.plus(this.positionToMove, Vector.times(this.wanderRadius * Math.random() * rc.radius, Vector.random()));
+                Vector.plus(this.positionToMove, Vector.times(3 * this.wanderRadius * Math.random() * c.radius, Vector.random()));
         }
     };
     return WanderCloselyBehavior;
 }());
-/* Move around the nearest circle clockwise, switching directions
+/* TODO: Move around the nearest circle clockwise, switching directions
  * periodically. */
 var circleBehavior = (function () {
     function circleBehavior() {
@@ -516,90 +630,6 @@ var circleBehavior = (function () {
         return;
     };
     return circleBehavior;
-}());
-// Red is the bad guys! Boo on them. They are a separate class because they are
-// going to have separate functions from the blue guys.
-var RedCircle = (function (_super) {
-    __extends(RedCircle, _super);
-    function RedCircle(id) {
-        var behavior = [];
-        for (var _i = 1; _i < arguments.length; _i++) {
-            behavior[_i - 1] = arguments[_i];
-        }
-        _super.call(this, 20, new Vector(200, 300));
-        this.wander = new WanderCloselyBehavior();
-        this.id = id;
-        this.color = "Red";
-        this.state = new State();
-        this.timeAlive = 0;
-    }
-    RedCircle.prototype.increment = function () {
-        this.timeAlive++;
-    };
-    RedCircle.prototype.behave = function (g) {
-        this.wander.condition(this, g);
-        this.wander.consequence(this);
-    };
-    return RedCircle;
-}(Circle));
-var Reds = (function () {
-    function Reds(count) {
-        this.count = count;
-        this.allRed = [];
-        for (var i = 0; i < this.count; i++) {
-            this.allRed.push(new RedCircle(i));
-        }
-    }
-    Reds.prototype.increment = function () {
-        for (var _i = 0, _a = this.allRed; _i < _a.length; _i++) {
-            var rc = _a[_i];
-            rc.timeAlive++;
-        }
-    };
-    Reds.prototype.positionAll = function () {
-        for (var i = 0; i < this.count; i++) {
-            this.allRed[i].move(330 + 20 * i, 250 + 20 * i);
-        }
-    };
-    Reds.prototype.draw = function () {
-        for (var i = 0; i < this.count; i++) {
-            this.allRed[i].draw();
-        }
-    };
-    Reds.prototype.moveToPosition = function () {
-        for (var i = 0; i < this.count; i++) {
-            this.allRed[i].moveToPosition(LASTCLICK);
-        }
-    };
-    Reds.prototype.isThenClipping = function () {
-        for (var _i = 0, _a = this.allRed; _i < _a.length; _i++) {
-            var r = _a[_i];
-            for (var _b = 0, _c = this.allRed; _b < _c.length; _b++) {
-                var or = _c[_b];
-                if (r !== or) {
-                    Circle.isThenClipping(or, r);
-                }
-            }
-        }
-    };
-    Reds.prototype.distanceTable = function () {
-        var table = [];
-        for (var i = 0; i < this.count; i++) {
-            table[i] = [];
-            for (var j = 0; i < this.count; i++) {
-                table.push(Infinity);
-            }
-        }
-        for (var i = 0; i < this.count; i++) {
-            for (var j = 0; j < this.count; j++) {
-                if (i !== j) {
-                    table[i][j] = Vector.dist(this.allRed[i].pos, this.allRed[j].pos);
-                }
-            }
-        }
-        return table;
-    };
-    return Reds;
 }());
 // -*- mode:typescript -*-
 // NEW PROJECT WOOH
@@ -618,7 +648,10 @@ function start() {
     // console.log(
     //     game.bottomFiveDistance(game.red.all[0]),
     //     game.momentClosestFive(game.red.all[0]))
-    clearScreen();
+    clearScreen(); // TODO: There is better way to do this, clearing the screen
+    // is pretty intensive, apparently. Also, the circles and
+    // things don't need to be drawn every frame. They can just
+    // moved around, but that should be easy to do later.
     game.collision();
     game.run();
     game.draw();
@@ -626,19 +659,20 @@ function start() {
 }
 var canvas = document.getElementById("gameCanvas");
 var ctx = canvas.getContext("2d");
-var LASTCLICK = new Vector(0, 0);
+var LASTCLICK = Vector.random();
+// How can I write this one with the fat arrow?
 canvas.onclick = function updateLastClick(event) {
     var mPos = getMousePos(canvas, event);
     LASTCLICK = new Vector(mPos.x, mPos.y);
 };
-function getMousePos(canvas, evt) {
+var getMousePos = function (canvas, evt) {
     var rect = canvas.getBoundingClientRect();
     return {
         x: evt.clientX - rect.left,
         y: evt.clientY - rect.top
     };
-}
-var game = new Game(7);
+};
+var game = new Game(10, 14);
 game.spawnRed();
 start();
 // clears the screen, obvii
@@ -646,15 +680,3 @@ function clearScreen() {
     ctx.clearRect(0, 0, 640, 640);
     // ctx.width, ctx.height);
 }
-// Blue is the good guys, but maybe add user changeable colors or something.
-var BlueCircle = (function (_super) {
-    __extends(BlueCircle, _super);
-    function BlueCircle() {
-        _super.call(this, 35, new Vector(500, 800));
-        this.color = "Blue";
-    }
-    BlueCircle.prototype.follow = function (cir) {
-        this.moveToPosition(cir);
-    };
-    return BlueCircle;
-}(Circle));
