@@ -46,7 +46,7 @@ var getMousePos = (canvas, evt) => {
     };
 }
 
-var game = new Game(10, 14);
+var game: Game = new Game(4, 4);
 game.spawnRed();
 start();
 

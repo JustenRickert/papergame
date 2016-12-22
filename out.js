@@ -6,25 +6,34 @@ var __extends = (this && this.__extends) || function (d, b) {
 // -*- mode:typescript -*-
 var Life = (function () {
     function Life(maxHealth) {
+        var _this = this;
+        this.damage = function (d) {
+            if (_this.health - d < 0)
+                _this.health = 0;
+            else
+                _this.health -= d;
+        };
+        this.heal = function (h) {
+            if (_this.health + h < _this.maxHealth)
+                _this.health += h;
+            else
+                _this.health = _this.maxHealth;
+        };
         this.maxHealth = maxHealth;
     }
-    Life.prototype.damage = function (d) {
-        if (this.health - d < 0)
-            this.health = 0;
-        else
-            this.health -= d;
-    };
-    Life.prototype.heal = function (h) {
-        if (this.health + h < this.maxHealth)
-            this.health += h;
-        else
-            this.health = this.maxHealth;
-    };
     return Life;
 }());
 var BasicAttack = (function () {
     function BasicAttack(d) {
+        var _this = this;
+        this.attackRate = 400;
+        this.canAttack = function () { return game.frame - _this.lastAttack > _this.attackRate; };
+        this.attack = function (c) {
+            c.life.damage(_this.damage);
+            _this.lastAttack = game.frame;
+        };
         this.damage = d;
+        this.lastAttack = 0;
     }
     return BasicAttack;
 }());
@@ -99,7 +108,9 @@ var Game = (function () {
                 }
             }
         };
+        this.increment = function () { _this.frame++; };
         this.run = function () {
+            _this.increment();
             _this.red.increment();
             _this.blue.increment();
             _this.behave();
@@ -121,13 +132,37 @@ var Game = (function () {
             _this.blue.isThenClipping();
             _this.redBlueIsThenClipping();
         };
+        this.closestCircle = function (c, color) {
+            if (color) {
+                var group = {
+                    'Red': _this.red.all,
+                    'Blue': _this.blue.all
+                }[color];
+            }
+            var minC;
+            var dist;
+            for (var _i = 0, group_1 = group; _i < group_1.length; _i++) {
+                var otherC = group_1[_i];
+                if (c !== otherC) {
+                    if (!minC)
+                        minC = otherC;
+                    dist = Vector.dist(c.pos, otherC.pos);
+                }
+                else
+                    dist = Infinity;
+                if (dist && Vector.dist(c.pos, minC.pos) > dist) {
+                    minC = otherC;
+                }
+            }
+            return minC;
+        };
         this.bottomFiveDistance = function (c, color) {
             var distance = {
                 'Red': _this.distanceRed[c.id],
                 'Blue': _this.distanceBlue[c.id]
             }[color];
             var id = [];
-            if (distance.length < 5) {
+            if (distance.length <= 5) {
                 for (var j in distance) {
                     id.push(j);
                 }
@@ -176,6 +211,7 @@ var Game = (function () {
         this.gameCount = redCount + blueCount;
         this.red = new Reds(redCount, this.gameCount);
         this.blue = new Blues(blueCount, this.gameCount);
+        this.frame = 0;
     }
     Game.prototype.updateDistanceTable = function () {
         this.distanceRed = this.red.distanceTable();
@@ -255,11 +291,15 @@ var Circle = (function () {
         this.speed = speed;
         this.turnRate = turnRate;
         this.clippingForce = 0.011;
+        this.life = new Life(-1);
         this.position = function (new_x, new_y) {
             _this.pos = new Vector(new_x, new_y);
         };
         this.moveForwardByVel = function () {
             _this.pos = new Vector(_this.pos.x + _this.speed * _this.vel.x, _this.pos.y + _this.speed * _this.vel.y);
+        };
+        this.moveForwardByScalarVel = function (scalar) {
+            _this.pos = new Vector(_this.pos.x + _this.speed * scalar * _this.vel.x, _this.pos.y + _this.speed * scalar * _this.vel.y);
         };
         this.moveForwardByVec = function (vec) {
             _this.pos = Vector.plus(_this.pos, vec);
@@ -360,11 +400,11 @@ var RedCircle = (function (_super) {
         }
         _super.call(this, id, 20, new Vector(200, 300));
         this.wander = new WanderCloselyBehavior(); // Default behavior
-        this.life = new Life(5);
         this.behaviors = behaviors;
         this.id = id;
         this.color = "Red";
         this.timeAlive = 0;
+        this.life.maxHealth = 10;
     }
     RedCircle.prototype.increment = function () {
         this.timeAlive++;
@@ -423,7 +463,7 @@ var Reds = (function () {
             var table = [];
             for (var i = 0; i < _this.count; i++) {
                 table[i] = [];
-                for (var j = 0; i < _this.count; i++) {
+                for (var j = 0; j < _this.count; j++) {
                     table.push(Infinity);
                 }
             }
@@ -456,7 +496,6 @@ var BlueCircle = (function (_super) {
         }
         _super.call(this, id, 20, new Vector(200, 300));
         this.wander = new WanderCloselyBehavior(); // Default behavior
-        this.life = new Life(5);
         this.increment = function () {
             _this.timeAlive++;
         };
@@ -468,15 +507,14 @@ var BlueCircle = (function (_super) {
                     return;
                 }
             }
-            if (_this.wander.condition(c, g)) {
-                _this.wander.consequence(c);
-                return;
-            }
+            _this.wander.condition(c, g);
+            _this.wander.consequence(c);
         };
         this.behaviors = behaviors;
         this.id = id;
         this.color = "Blue";
         this.timeAlive = 0;
+        this.life.maxHealth = 10;
     }
     return BlueCircle;
 }(Circle));
@@ -519,8 +557,8 @@ var Blues = (function () {
             var table = [];
             for (var i = 0; i < _this.count; i++) {
                 table[i] = [];
-                for (var j = 0; i < _this.count; i++) {
-                    table.push(Infinity);
+                for (var j = 0; j < _this.count; j++) {
+                    table[i].push(Infinity);
                 }
             }
             for (var i = 0; i < _this.count; i++) {
@@ -535,7 +573,7 @@ var Blues = (function () {
         this.count = count;
         this.all = [];
         for (var i = 0; i < count; i++) {
-            this.all.push(new BlueCircle(i));
+            this.all.push(new BlueCircle(i, new AttackBehavior()));
         }
         gameCount += count;
     }
@@ -544,12 +582,37 @@ var Blues = (function () {
 // -*- mode:typescript -*-
 var AttackBehavior = (function () {
     function AttackBehavior() {
+        var _this = this;
+        this.bAttack = new BasicAttack(1);
+        this.attackRange = 3;
+        this.lungeVelocity = 3;
+        this.condition = function (c, g) {
+            if (_this.bAttack.canAttack()) {
+                var opposingColor = {
+                    'Red': 'Blue',
+                    'Blue': 'Red'
+                }[c.color];
+                _this.targetC = game.closestCircle(c, opposingColor);
+                return true;
+            }
+            return false;
+        };
+        this.consequence = function (attackC) {
+            // Is the attacking circle close to the defending circle?
+            if (Vector.dist(attackC.pos, _this.targetC.pos) > _this.attackRange * attackC.radius)
+                attackC.moveToPosition(_this.targetC.pos);
+            else if (Vector.angleBetween(attackC.vel, Vector.minus(_this.targetC.pos, attackC.pos)) < .07)
+                _this.lungeAndAttack(attackC);
+            else
+                attackC.turnToPosition(_this.targetC.pos);
+        };
+        this.lungeAndAttack = function (attackC) {
+            attackC.moveForwardByScalarVel(_this.lungeVelocity);
+            if (Circle.isClipping(attackC, _this.targetC)) {
+                _this.bAttack.attack(_this.targetC);
+            }
+        };
     }
-    AttackBehavior.prototype.condition = function (c, g) {
-        return false;
-    };
-    AttackBehavior.prototype.consequence = function (c) {
-    };
     return AttackBehavior;
 }());
 /* Ugh. So this took a lot more work than I thought that it would take. Maybe
@@ -672,7 +735,7 @@ var getMousePos = function (canvas, evt) {
         y: evt.clientY - rect.top
     };
 };
-var game = new Game(10, 14);
+var game = new Game(4, 4);
 game.spawnRed();
 start();
 // clears the screen, obvii

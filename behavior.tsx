@@ -6,29 +6,64 @@
      super good idea about how to handle different kinds of red units.
 
    First, there needs to be a set of classes for behaviors. I will make an
-   interface which consists of an array of predicate functions, and
-   corresponding consequences which ultimately will be how the circle appears on
-   the screen.
+   interface which consists of an array of predicate functions (conditions), and
+   corresponding (function) consequences which ultimately will be how the circles
+   appear on the screen and act accordingly.
 
-   Secondly, behaviors can tell other circles what to do! */
+   Each circle has a default behavior, which is just to wander closely to the
+   moment of nearly, friendly circles. Aside from that, the behaviors of the
+   circles are put into a list member attribute of each of the circles. Each of
+   the behavior predicates get run, then acting with the associated behavior
+   consequence if any of the corresponding predicates return true. */
 
 interface Behavior {
     condition(c: Circle, g: Game): boolean;
-    consequence(c: Circle): any;
+    consequence(c: Circle, ...otherC: Circle[]): any;
 }
 
+/* Attack the closest target to the circle given that the attackRate allows it.
+ * The consequence is a sort of lunging attack that throws the attacking circle
+ * (attackC: Circle) at the defending circle (defendC/targetC: Circle). */
 class AttackBehavior implements Behavior {
-    public condition(c: Circle, g: Game) {
-        return false
+    public bAttack: BasicAttack = new BasicAttack(1);
+    public attackRange: number = 3;
+    public lungeVelocity: number = 3;
+    public targetC: Circle;
+
+    public condition = (c: Circle, g: Game): boolean => {
+        if (this.bAttack.canAttack()) {
+            let opposingColor: string = {
+                'Red': 'Blue',
+                'Blue': 'Red'
+            }[c.color]
+            this.targetC = game.closestCircle(c, opposingColor);
+            return true;
+        }
+        return false;
     }
-    public consequence(c: Circle) {
+    public consequence = (attackC: Circle): any => {
+        // Is the attacking circle close to the defending circle?
+        if (Vector.dist(attackC.pos, this.targetC.pos) > this.attackRange * attackC.radius)
+            attackC.moveToPosition(this.targetC.pos);
+        // Is the angle right to lunge at the enemy?
+        else if (Vector.angleBetween(attackC.vel, Vector.minus(this.targetC.pos, attackC.pos)) < .07)
+            this.lungeAndAttack(attackC);
+        // Turn to the defending circle so the previous predicate is true.
+        else
+            attackC.turnToPosition(this.targetC.pos);
+    }
+    public lungeAndAttack = (attackC: Circle): void => {
+        attackC.moveForwardByScalarVel(this.lungeVelocity);
+        if (Circle.isClipping(attackC, this.targetC)) {
+            this.bAttack.attack(this.targetC);
+        }
     }
 }
 
-/* Ugh. So this took a lot more work than I thought that it would take. Maybe
- * there's an easier way to go about this. I think this will work a lot better
- * in conjunction with other behaviors. I want this behavior to be the default
- * behavior for circles. */
+/* I want this behavior to be the default behavior for circles. Tells the circle
+ * to wander if the circle is within the wander Radius (wanderRadius) of the
+ * moment (the "vector mean" if the mean is the average of a set of values) of
+ * the closest five, friendly circles. */
 class WanderCloselyBehavior implements Behavior {
     private shouldRunToGroup: boolean;
     private shouldWander: number = 60;
@@ -94,8 +129,9 @@ class WanderCloselyBehavior implements Behavior {
     }
 }
 
-/* TODO: Move around the nearest circle clockwise, switching directions
- * periodically. */
+/* TODO: Move around the nearest, friendly circle clockwise, switching
+ * directions periodically. There could maybe be a damage consequence upon
+ * clipping an enemy circle. */
 class circleBehavior implements Behavior {
     constructor() { }
     // Do the circling behavior always

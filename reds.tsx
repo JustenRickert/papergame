@@ -11,14 +11,14 @@ class RedCircle extends Circle {
     public behaviors: Behavior[];
     public wander: Behavior = new WanderCloselyBehavior(); // Default behavior
 
-    public life = new Life(5);
-
     constructor(id: number, ...behaviors: Behavior[]) {
         super(id, 20, new Vector(200, 300))
         this.behaviors = behaviors;
         this.id = id;
         this.color = "Red";
         this.timeAlive = 0
+
+        this.life.maxHealth = 10;
     }
     public increment() {
         this.timeAlive++
@@ -84,7 +84,7 @@ class Reds {
         var table: any[] = [];
         for (let i = 0; i < this.count; i++) {
             table[i] = []
-            for (let j = 0; i < this.count; i++) {
+            for (let j = 0; j < this.count; j++) {
                 table.push(Infinity);
             }
         }

@@ -2,6 +2,7 @@
 // Circles are cool!
 class Circle {
     public clippingForce: number = 0.011;
+    public life: Life = new Life(-1);
     constructor(
         public id: number,
         public radius: number,
@@ -25,6 +26,12 @@ class Circle {
             this.pos.x + this.speed * this.vel.x,
             this.pos.y + this.speed * this.vel.y);
     }
+    public moveForwardByScalarVel = (scalar: number): void => {
+        this.pos = new Vector(
+            this.pos.x + this.speed * scalar * this.vel.x,
+            this.pos.y + this.speed * scalar * this.vel.y);
+    }
+
     public moveForwardByVec = (vec: Vector): void => {
         this.pos = Vector.plus(this.pos, vec);
     }

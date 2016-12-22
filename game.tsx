@@ -37,7 +37,7 @@ class Game implements Information {
         this.gameCount = redCount + blueCount;
         this.red = new Reds(redCount, this.gameCount);
         this.blue = new Blues(blueCount, this.gameCount);
-
+        this.frame = 0
     }
     public redBlueIsThenClipping = (): void => {
         for (let r of this.red.all) { // r for red
@@ -46,7 +46,9 @@ class Game implements Information {
             }
         }
     }
+    public increment = (): void => { this.frame++ }
     public run = (): void => {
+        this.increment()
         this.red.increment();
         this.blue.increment();
         this.behave();
@@ -73,13 +75,34 @@ class Game implements Information {
         this.distanceRed = this.red.distanceTable();
         this.distanceBlue = this.blue.distanceTable();
     }
+    public closestCircle = (c: Circle, color?: string): Circle => {
+        if (color) {
+            var group: Circle[] = {
+                'Red': this.red.all,
+                'Blue': this.blue.all
+            }[color]
+        }
+        var minC: Circle;
+        var dist: number;
+        for (let otherC of group) {
+            if (c !== otherC) {
+                if (!minC)
+                    minC = otherC
+                dist = Vector.dist(c.pos, otherC.pos);
+            } else dist = Infinity
+            if (dist && Vector.dist(c.pos, minC.pos) > dist) {
+                minC = otherC;
+            }
+        }
+        return minC;
+    }
     public bottomFiveDistance = (c: Circle, color: string): any[] => {
         var distance = {
             'Red': this.distanceRed[c.id],
             'Blue': this.distanceBlue[c.id]
         }[color];
         let id = [];
-        if (distance.length < 5) {
+        if (distance.length <= 5) {
             for (let j in distance) {
                 id.push(j);
             }

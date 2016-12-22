@@ -21,3 +21,35 @@ Thus:
 - interactions between red and blue, so things like mean staring, attacking,
   general aggression, etc. Maybe I could toy around with speech bubbles and
   things.
+
+* [2016-12-20 Tue]
+Blue and Red are now appearing on the screen, and they have the ability to
+behave. Just as well, they collide with themselves and with each other. Movement
+seems to be pretty satisfying at this point, and my CPU seems to have a lot of
+difference between application CPU load and maximum CPU load.
+
+Moving forward I'm going to have to work on attacking (and maybe healing) in
+order for more interesting behavior to make sense. It wouldn't make sense, for
+example, that an attackBehavior didn't actually have the capacity to deal
+damage.
+
+I also started to take a look at what all the WebGL libraries are kind of doing.
+The rationale is the same as what OpenGL uses, and probably the game would be
+superior operating on one of those libraries. That being said, those libraries
+are more-so necessary for three dimensional graphing as all of the data types
+are stored in more densely populated matrices requiring many mathematical
+operations and which would require a graphics card. I'm not really looking to do
+anything fancy. There's no light rays, or even shading.
+
+* [2016-12-21 Wed]
+The game is starting to move towards an obvious direction. That is, the behavior
+system should now make sense from an outside perspective. Simply add the
+behavior to the list of behaviors of the particular circle (ensuring that there
+is in fact a condition for the behavior, as well as a consequence for the
+behavior), then the circle should behave (using the =behave= function).
+
+There still is yet to be implemented the actual damaging of the circles, but I
+already have added the =Life= Class, so it should be fairly straight-forward how
+exactly that will be implemented. I also fixed some bugs that weren't actually
+showing themselves in the game; and I'm honestly not really sure how it wasn't
+fucking everything up.

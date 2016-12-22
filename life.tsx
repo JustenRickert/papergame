@@ -7,11 +7,11 @@ class Life {
     constructor(maxHealth: number) {
         this.maxHealth = maxHealth;
     }
-    public damage(d: number): void {
+    public damage = (d: number): void => {
         if (this.health - d < 0) this.health = 0;
         else this.health -= d;
     }
-    public heal(h: number): void {
+    public heal = (h: number): void => {
         if (this.health + h < this.maxHealth) this.health += h;
         else this.health = this.maxHealth;
     }
@@ -19,8 +19,16 @@ class Life {
 
 class BasicAttack {
     public damage: number;
-    constructor(d:number) {
+    public lastAttack: number;
+    public attackRate: number = 400;
+    constructor(d: number) {
         this.damage = d;
+        this.lastAttack = 0;
+    }
+    public canAttack = (): boolean => { return game.frame - this.lastAttack > this.attackRate; }
+    public attack = (c: Circle): void => {
+        c.life.damage(this.damage);
+        this.lastAttack = game.frame;
     }
 }
 
