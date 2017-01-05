@@ -21,6 +21,7 @@ interface Vertex {
     e: Edge[]
 }
 
+TEST_GRAPH = new Graph();
 
 // Dirty edges and Clean edges
 class Graph {
@@ -33,8 +34,8 @@ class Graph {
         this.edges = Graph.getEdges(circles);
         this.vertexes = this.getVertexes(circles);
 
-        let vertexes = [],
-            edges = this.edges;
+        let vertexes = [];
+        let edges = this.edges;
         // for (let c of circles) {
         //     let edges = this.edges.filter(Graph.isEdgeOfVertex)
         //     this.vertexes[c].e.push(edges)

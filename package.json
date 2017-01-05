@@ -1,1 +1,8 @@
-{ }
+{
+    "name": "papergame",
+    "author": "jsasz",
+    "version": "0.0.1",
+    "main": "./lib/main.js",
+    "types": "./lib/main.d.ts"
+}
+
