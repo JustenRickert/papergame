@@ -12,6 +12,7 @@ var Life = (function () {
                 _this.health = 0;
             else
                 _this.health -= d;
+            console.log(_this.health);
         };
         this.heal = function (h) {
             if (_this.health + h < _this.maxHealth)
@@ -26,7 +27,7 @@ var Life = (function () {
 var BasicAttack = (function () {
     function BasicAttack(d) {
         var _this = this;
-        this.attackRate = 400;
+        this.attackRate = 90;
         this.canAttack = function () { return game.frame - _this.lastAttack > _this.attackRate; };
         this.attack = function (c) {
             c.life.damage(_this.damage);
@@ -99,6 +100,8 @@ var Vector = (function () {
 var Game = (function () {
     function Game(redCount, blueCount) {
         var _this = this;
+        this.won = false;
+        this.lost = false;
         this.redBlueIsThenClipping = function () {
             for (var _i = 0, _a = _this.red.all; _i < _a.length; _i++) {
                 var r = _a[_i];
@@ -127,6 +130,26 @@ var Game = (function () {
             // spawns red dudes and then tells them what to do.
             _this.blue.positionAll();
         };
+        this.markDead = function () {
+            for (var _i = 0, _a = _this.red.all; _i < _a.length; _i++) {
+                var r = _a[_i];
+                if (r.isDead())
+                    r.markDead();
+            }
+            for (var _b = 0, _c = _this.blue.all; _b < _c.length; _b++) {
+                var b = _c[_b];
+                if (b.isDead())
+                    b.markDead();
+            }
+        };
+        this.losing = function () { _this.lost = true; };
+        this.winning = function () { _this.won = true; };
+        this.checkWinLose = function () {
+            if (_this.red.all.every(Circle.isDead))
+                _this.losing();
+            else if (_this.blue.all.every(Circle.isDead))
+                _this.winning();
+        };
         this.collision = function () {
             _this.red.isThenClipping();
             _this.blue.isThenClipping();
@@ -144,13 +167,13 @@ var Game = (function () {
             for (var _i = 0, group_1 = group; _i < group_1.length; _i++) {
                 var otherC = group_1[_i];
                 if (c !== otherC) {
-                    if (!minC)
+                    if (!minC && otherC.alive)
                         minC = otherC;
                     dist = Vector.dist(c.pos, otherC.pos);
                 }
                 else
                     dist = Infinity;
-                if (dist && Vector.dist(c.pos, minC.pos) > dist) {
+                if (otherC.alive && dist && Vector.dist(c.pos, minC.pos) > dist) {
                     minC = otherC;
                 }
             }
@@ -201,11 +224,13 @@ var Game = (function () {
         this.behave = function () {
             for (var _i = 0, _a = _this.red.all; _i < _a.length; _i++) {
                 var r = _a[_i];
-                r.behave(r, _this);
+                if (r.alive)
+                    r.behave(r, _this);
             }
             for (var _b = 0, _c = _this.blue.all; _b < _c.length; _b++) {
                 var b = _c[_b];
-                b.behave(b, _this);
+                if (b.alive)
+                    b.behave(b, _this);
             }
         };
         this.gameCount = redCount + blueCount;
@@ -314,7 +339,7 @@ var Circle = (function () {
             _this.adjustVelocityToDirection();
         };
         this.turnToPosition = function (pos) {
-            if (Math.abs(Vector.angleBetween(_this.vel, Vector.minus(pos, _this.pos))) > 0.07) {
+            if (Math.abs(Vector.angleBetween(_this.vel, Vector.minus(pos, _this.pos))) > 0.01) {
                 _this.turn(_this.turnRate * Vector.directionTo(_this.vel, Vector.minus(pos, _this.pos)));
             }
         };
@@ -329,13 +354,31 @@ var Circle = (function () {
         };
         this.moveToPosition = function (pos) {
             _this.turnToPosition(pos);
-            if (Vector.angleBetween(_this.vel, Vector.minus(pos, _this.pos)) < .07) {
+            if (_this.angleToPosition(pos)) {
                 if (Vector.dist(_this.pos, pos) > .1 * _this.radius) {
                     _this.moveForwardByVel();
                 }
             }
         };
+        // This function, as well as `angleToPosition' may seem kind of strange. It
+        // is the angle between the direction of movement of this circle to the
+        // direction that this circle would face if it were pointing at the other
+        // circle.
+        this.angleToCircle = function (otherC) {
+            return Vector.angleBetween(_this.vel, Vector.minus(otherC.pos, _this.pos));
+        };
+        this.angleToPosition = function (v) {
+            return Vector.angleBetween(_this.vel, Vector.minus(v, _this.pos));
+        };
+        // Just a note, perhaps, that it is more efficient to use the built-in
+        // function drawImage instead of drawing the circles and filling them in at
+        // every frame. However, this is sort of the least of my concerns , because
+        // in the future static images may be used instead, and also the game has a
+        // ridiculous amount of overhead at this point (2016-12-21, 835 lines of
+        // code).
         this.draw = function () {
+            if (!_this.alive)
+                _this.color = 'gray';
             // Draw the Circle
             ctx.beginPath();
             ctx.arc(_this.pos.x, _this.pos.y, _this.radius, 0, 2 * Math.PI);
@@ -357,10 +400,17 @@ var Circle = (function () {
             ctx.fill();
             ctx.closePath();
         };
+        this.isDead = function () { return _this.life.health === 0; };
+        this.markDead = function () {
+            _this.alive = false;
+        };
+        this.alive = true;
         // if (!this.direction)
         // this.vel = Vector.random();
         // this.direction = 4 * Math.PI * Math.random() - 2 * Math.PI;
     }
+    Circle.isDead = function (c) { return c.life.health === 0; };
+    Circle.isAlive = function (c) { return c.life.health !== 0; };
     Circle.isThenClipping = function (c1, c2) {
         if (Circle.isClipping(c1, c2)) {
             Circle.clippingPush(c1, c2);
@@ -378,8 +428,7 @@ var Circle = (function () {
         c1.moveForwardByVec(Vector.times(c1.clippingForce, c1Force));
         c2.moveForwardByVec(Vector.times(c2.clippingForce, c2Force));
     };
-    // These static methods need to be in Circle, and not Vector, because they
-    // need access to Circle.radius and other attributes.
+    // determines whether the circles are drawing themselves over one another.
     Circle.isClipping = function (c1, c2) {
         return Vector.dist(c1.pos, c2.pos) < c1.radius + c2.radius;
     };
@@ -405,6 +454,7 @@ var RedCircle = (function (_super) {
         this.color = "Red";
         this.timeAlive = 0;
         this.life.maxHealth = 10;
+        this.life.health = this.life.maxHealth;
     }
     RedCircle.prototype.increment = function () {
         this.timeAlive++;
@@ -435,7 +485,7 @@ var Reds = (function () {
         };
         this.positionAll = function () {
             for (var i = 0; i < _this.count; i++) {
-                _this.all[i].position(330 + 20 * i, 250 + 20 * i);
+                _this.all[i].position(15, 15);
             }
         };
         this.draw = function () {
@@ -479,7 +529,7 @@ var Reds = (function () {
         this.count = count;
         this.all = [];
         for (var i = 0; i < count; i++) {
-            this.all.push(new RedCircle(i));
+            this.all.push(new RedCircle(i, new AttackBehavior()));
         }
         gameCount += count;
     }
@@ -515,6 +565,7 @@ var BlueCircle = (function (_super) {
         this.color = "Blue";
         this.timeAlive = 0;
         this.life.maxHealth = 10;
+        this.life.health = this.life.maxHealth;
     }
     return BlueCircle;
 }(Circle));
@@ -529,7 +580,7 @@ var Blues = (function () {
         };
         this.positionAll = function () {
             for (var i = 0; i < _this.count; i++) {
-                _this.all[i].position(500 + 20 * i, 250);
+                _this.all[i].position(canvas.width - 15, canvas.height - 15);
             }
         };
         this.draw = function () {
@@ -544,11 +595,11 @@ var Blues = (function () {
         };
         this.isThenClipping = function () {
             for (var _i = 0, _a = _this.all; _i < _a.length; _i++) {
-                var r = _a[_i];
+                var b = _a[_i];
                 for (var _b = 0, _c = _this.all; _b < _c.length; _b++) {
                     var or = _c[_b];
-                    if (r !== or) {
-                        Circle.isThenClipping(or, r);
+                    if (b !== or) {
+                        Circle.isThenClipping(or, b);
                     }
                 }
             }
@@ -580,6 +631,9 @@ var Blues = (function () {
     return Blues;
 }());
 // -*- mode:typescript -*-
+/* Attack the closest target to the circle given that the attackRate allows it.
+ * The consequence is a sort of lunging attack that throws the attacking circle
+ * (attackC: Circle) at the defending circle (defendC/targetC: Circle). */
 var AttackBehavior = (function () {
     function AttackBehavior() {
         var _this = this;
@@ -593,6 +647,8 @@ var AttackBehavior = (function () {
                     'Blue': 'Red'
                 }[c.color];
                 _this.targetC = game.closestCircle(c, opposingColor);
+                if (!_this.targetC)
+                    return false;
                 return true;
             }
             return false;
@@ -601,8 +657,9 @@ var AttackBehavior = (function () {
             // Is the attacking circle close to the defending circle?
             if (Vector.dist(attackC.pos, _this.targetC.pos) > _this.attackRange * attackC.radius)
                 attackC.moveToPosition(_this.targetC.pos);
-            else if (Vector.angleBetween(attackC.vel, Vector.minus(_this.targetC.pos, attackC.pos)) < .07)
+            else if (Math.abs(attackC.angleToCircle(_this.targetC)) < .1) {
                 _this.lungeAndAttack(attackC);
+            }
             else
                 attackC.turnToPosition(_this.targetC.pos);
         };
@@ -615,10 +672,10 @@ var AttackBehavior = (function () {
     }
     return AttackBehavior;
 }());
-/* Ugh. So this took a lot more work than I thought that it would take. Maybe
- * there's an easier way to go about this. I think this will work a lot better
- * in conjunction with other behaviors. I want this behavior to be the default
- * behavior for circles. */
+/* I want this behavior to be the default behavior for circles. Tells the circle
+ * to wander if the circle is within the wander Radius (wanderRadius) of the
+ * moment (the "vector mean" if the mean is the average of a set of values) of
+ * the closest five, friendly circles. */
 var WanderCloselyBehavior = (function () {
     function WanderCloselyBehavior() {
         this.shouldWander = 60;
@@ -678,8 +735,9 @@ var WanderCloselyBehavior = (function () {
     };
     return WanderCloselyBehavior;
 }());
-/* TODO: Move around the nearest circle clockwise, switching directions
- * periodically. */
+/* TODO: Move around the nearest, friendly circle clockwise, switching
+ * directions periodically. There could maybe be a damage consequence upon
+ * clipping an enemy circle. */
 var circleBehavior = (function () {
     function circleBehavior() {
     }
@@ -703,8 +761,8 @@ var circleBehavior = (function () {
  * then as you go on economic pieces will be added, which will then allow
  * upgrading units, and even constructing new units from a factory. The game
  * will be played by assigning intelligence to the particular pieces---either to
- * defend other specific pieces, or attack unrelentingly---so that the end goal
- * is one team winning over the other. */
+ * defend other specific pieces, or attack unrelentingly---so that then the end
+ * goal is one team winning over the other. */
 function start() {
     game.frame++;
     game.updateDistanceTable();
@@ -712,12 +770,16 @@ function start() {
     //     game.bottomFiveDistance(game.red.all[0]),
     //     game.momentClosestFive(game.red.all[0]))
     clearScreen(); // TODO: There is better way to do this, clearing the screen
-    // is pretty intensive, apparently. Also, the circles and
-    // things don't need to be drawn every frame. They can just
-    // moved around, but that should be easy to do later.
+    // is pretty intensive, apparently. Also, the circles and things don't need
+    // to be drawn every frame. They can just moved around, but that should be
+    // easy to do later.
     game.collision();
     game.run();
     game.draw();
+    game.markDead();
+    game.checkWinLose();
+    if (game.won || game.lost)
+        return;
     requestAnimationFrame(start);
 }
 var canvas = document.getElementById("gameCanvas");
@@ -735,8 +797,9 @@ var getMousePos = function (canvas, evt) {
         y: evt.clientY - rect.top
     };
 };
-var game = new Game(4, 4);
+var game = new Game(100, 100);
 game.spawnRed();
+game.spawnBlue();
 start();
 // clears the screen, obvii
 function clearScreen() {

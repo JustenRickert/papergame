@@ -1,8 +1,10 @@
+// -*-mode:typescript-*-
 
 // Circles are cool!
 class Circle {
     public clippingForce: number = 0.011;
     public life: Life = new Life(-1);
+    public alive: boolean;
     constructor(
         public id: number,
         public radius: number,
@@ -14,6 +16,7 @@ class Circle {
         public speed: number = 2.5,
         public turnRate: number = 0.07
     ) {
+        this.alive = true;
         // if (!this.direction)
         // this.vel = Vector.random();
         // this.direction = 4 * Math.PI * Math.random() - 2 * Math.PI;
@@ -45,7 +48,7 @@ class Circle {
         this.adjustVelocityToDirection();
     }
     public turnToPosition = (pos: Vector): void => {
-        if (Math.abs(Vector.angleBetween(this.vel, Vector.minus(pos, this.pos))) > 0.07) { // 0.07 could maybe be abstracted
+        if (Math.abs(Vector.angleBetween(this.vel, Vector.minus(pos, this.pos))) > 0.01) {
             this.turn(this.turnRate * Vector.directionTo(this.vel, Vector.minus(pos, this.pos)));
         }
     }
@@ -60,13 +63,31 @@ class Circle {
     }
     public moveToPosition = (pos: Vector): void => {
         this.turnToPosition(pos);
-        if (Vector.angleBetween(this.vel, Vector.minus(pos, this.pos)) < .07) {
+        if (this.angleToPosition(pos)) {
             if (Vector.dist(this.pos, pos) > .1 * this.radius) {
                 this.moveForwardByVel();
             }
         }
     }
+    // This function, as well as `angleToPosition' may seem kind of strange. It
+    // is the angle between the direction of movement of this circle to the
+    // direction that this circle would face if it were pointing at the other
+    // circle.
+    public angleToCircle = (otherC: Circle): number => {
+        return Vector.angleBetween(this.vel, Vector.minus(otherC.pos, this.pos))
+    }
+    public angleToPosition = (v: Vector): number => {
+        return Vector.angleBetween(this.vel, Vector.minus(v, this.pos))
+    }
+    // Just a note, perhaps, that it is more efficient to use the built-in
+    // function drawImage instead of drawing the circles and filling them in at
+    // every frame. However, this is sort of the least of my concerns , because
+    // in the future static images may be used instead, and also the game has a
+    // ridiculous amount of overhead at this point (2016-12-21, 835 lines of
+    // code).
     public draw = (): void => {
+        if (!this.alive)
+            this.color = 'gray'
         // Draw the Circle
         ctx.beginPath();
         ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
@@ -94,13 +115,21 @@ class Circle {
         ctx.fill();
         ctx.closePath();
     }
+
+    public isDead = (): boolean => this.life.health === 0;
+    public static isDead = (c: Circle): boolean => c.life.health === 0;
+    public static isAlive = (c: Circle): boolean => c.life.health !== 0;
+    public markDead = (): void => {
+        this.alive = false;
+    }
+
     public static isThenClipping = (c1: Circle, c2: Circle): void => {
         if (Circle.isClipping(c1, c2)) {
-            Circle.clippingPush(c1, c2)
+            Circle.clippingPush(c1, c2);
         }
     }
     public static clippingPush = (c1: Circle, c2: Circle): void => {
-        let dist = Vector.dist(c1.pos, c2.pos)
+        let dist = Vector.dist(c1.pos, c2.pos);
         let dirTo = Vector.minus(c1.pos, c2.pos);
         let c1Force = dirTo;
         let c2Force = Vector.times(-1, dirTo);
@@ -111,8 +140,7 @@ class Circle {
         c1.moveForwardByVec(Vector.times(c1.clippingForce, c1Force));
         c2.moveForwardByVec(Vector.times(c2.clippingForce, c2Force));
     }
-    // These static methods need to be in Circle, and not Vector, because they
-    // need access to Circle.radius and other attributes.
+    // determines whether the circles are drawing themselves over one another.
     static isClipping = (c1: Circle, c2: Circle): boolean => {
         return Vector.dist(c1.pos, c2.pos) < c1.radius + c2.radius;
     }

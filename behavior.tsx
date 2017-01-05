@@ -37,6 +37,8 @@ class AttackBehavior implements Behavior {
                 'Blue': 'Red'
             }[c.color]
             this.targetC = game.closestCircle(c, opposingColor);
+            if (!this.targetC)
+                return false
             return true;
         }
         return false;
@@ -46,8 +48,9 @@ class AttackBehavior implements Behavior {
         if (Vector.dist(attackC.pos, this.targetC.pos) > this.attackRange * attackC.radius)
             attackC.moveToPosition(this.targetC.pos);
         // Is the angle right to lunge at the enemy?
-        else if (Vector.angleBetween(attackC.vel, Vector.minus(this.targetC.pos, attackC.pos)) < .07)
+        else if (Math.abs(attackC.angleToCircle(this.targetC)) < .1) {
             this.lungeAndAttack(attackC);
+        }
         // Turn to the defending circle so the previous predicate is true.
         else
             attackC.turnToPosition(this.targetC.pos);

@@ -19,6 +19,7 @@ class RedCircle extends Circle {
         this.timeAlive = 0
 
         this.life.maxHealth = 10;
+        this.life.health = this.life.maxHealth;
     }
     public increment() {
         this.timeAlive++
@@ -47,7 +48,7 @@ class Reds {
         this.count = count;
         this.all = [];
         for (var i = 0; i < count; i++) {
-            this.all.push(new RedCircle(i));
+            this.all.push(new RedCircle(i, new AttackBehavior()));
         }
         gameCount += count
     }
@@ -58,7 +59,7 @@ class Reds {
     }
     public positionAll = (): void => {
         for (var i = 0; i < this.count; i++) {
-            this.all[i].position(330 + 20 * i, 250 + 20 * i);
+            this.all[i].position(15, 15);
         }
     }
     public draw = (): void => {

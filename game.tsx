@@ -16,15 +16,32 @@
 //   results in a memory to computational complexity trade-off. Having the table
 //   also allows for higher order functions like for example the
 //   bottomFiveDistance function, which extracts the bottom five distances as a
-//   list, treating each row as a string of distances.
+//   list, treating each row as an array of distances.
+
+// ANOTHER POTENTIAL DISTANCE MEASUREMENT
+
+//   A minimum spanning tree could be used instead of the previous
+//   distance-based thinking above. Clusters of close circles can be found
+//   easily by simply erasing the maximum-weight edges of the minimum spanning
+//   tree, then collecting the associated trees of the new forest. The above
+//   distance table is an O(n^2) function, and results in new functions on the
+//   arrays to be O(n). A minimum spanning tree algorithm could be O(n^2 +
+//   lg(n)) which is only slightly worse, however, the forest (collections of
+//   trees) could support a lot more interesting underlying functions, and the
+//   O(n) functions from the distance ideas could be slightly improved to be a
+//   function of O(n/a) for some a >= 1.
 
 interface Information {
     red: Reds;
     blue: Blues;
     distanceRed: number[][];
+    distanceBlue: number[][];
 }
 
 class Game implements Information {
+    public won: boolean = false;
+    public lost: boolean = false;
+
     public frame: number;
     public gameCount: number;
 
@@ -65,7 +82,24 @@ class Game implements Information {
         // spawns red dudes and then tells them what to do.
         this.blue.positionAll();
     }
-
+    public markDead = (): void => {
+        for (let r of this.red.all) {
+            if (r.isDead())
+                r.markDead();
+        }
+        for (let b of this.blue.all) {
+            if (b.isDead())
+                b.markDead();
+        }
+    }
+    public losing = (): void => { this.lost = true }
+    public winning = (): void => { this.won = true }
+    public checkWinLose = (): void => {
+        if (this.red.all.every(Circle.isDead))
+            this.losing();
+        else if (this.blue.all.every(Circle.isDead))
+            this.winning();
+    }
     public collision = (): void => {
         this.red.isThenClipping();
         this.blue.isThenClipping();
@@ -86,13 +120,12 @@ class Game implements Information {
         var dist: number;
         for (let otherC of group) {
             if (c !== otherC) {
-                if (!minC)
+                if (!minC && otherC.alive)
                     minC = otherC
                 dist = Vector.dist(c.pos, otherC.pos);
             } else dist = Infinity
-            if (dist && Vector.dist(c.pos, minC.pos) > dist) {
+            if (otherC.alive && dist && Vector.dist(c.pos, minC.pos) > dist)
                 minC = otherC;
-            }
         }
         return minC;
     }
@@ -139,10 +172,12 @@ class Game implements Information {
     }
     public behave = (): void => {
         for (let r of this.red.all) {
-            r.behave(r, this);
+            if (r.alive)
+                r.behave(r, this);
         }
         for (let b of this.blue.all) {
-            b.behave(b, this);
+            if (b.alive)
+                b.behave(b, this);
         }
     }
     /* Returns the center of mass. All of the circles have the same mass, so

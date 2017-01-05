@@ -14,6 +14,7 @@ class BlueCircle extends Circle {
         this.timeAlive = 0
 
         this.life.maxHealth = 10;
+        this.life.health = this.life.maxHealth;
     }
     public increment = (): void => {
         this.timeAlive++
@@ -51,8 +52,7 @@ class Blues {
     }
     public positionAll = (): void => {
         for (var i = 0; i < this.count; i++) {
-            this.all[i].position(500 + 20 * i, 250);
-            // this.all[i].move(322 + 20 * i, 322 + 20 * i)
+            this.all[i].position(canvas.width-15, canvas.height-15);
         }
     }
     public draw = (): void => {
@@ -66,10 +66,10 @@ class Blues {
         }
     }
     public isThenClipping = (): void => {
-        for (let r of this.all) { // r for red
-            for (let or of this.all) { // or for other red
-                if (r !== or) {
-                    Circle.isThenClipping(or, r);
+        for (let b of this.all) {
+            for (let or of this.all) {
+                if (b !== or) {
+                    Circle.isThenClipping(or, b);
                 }
             }
         }
