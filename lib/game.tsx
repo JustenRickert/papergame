@@ -33,7 +33,7 @@
 
 interface Information {
     red: Reds;
-    blue: Blues;
+    // blue: Blues;
     distanceRed: number[][];
     distanceBlue: number[][];
 }
@@ -45,75 +45,79 @@ class Game implements Information {
     public frame: number;
     public gameCount: number;
 
+    public graph: Graph;
+    public circles: Circle[];
+
+    // Superfluous at this point...
     public red: Reds;
-    public blue: Blues;
+    // public blue: Blues;
     public distanceRed: number[][];
     public distanceBlue: number[][];
 
     constructor(redCount: number, blueCount: number) {
         this.gameCount = redCount + blueCount;
         this.red = new Reds(redCount, this.gameCount);
-        this.blue = new Blues(blueCount, this.gameCount);
+        // this.blue = new Blues(blueCount, this.gameCount);
         this.frame = 0
     }
-    public redBlueIsThenClipping = (): void => {
-        for (let r of this.red.all) { // r for red
-            for (let b of this.blue.all) { // b for blue
-                Circle.isThenClipping(r, b);
-            }
-        }
-    }
+    // public redBlueIsThenClipping = (): void => {
+    //     for (let r of this.red.all) { // r for red
+    //         for (let b of this.blue.all) { // b for blue
+    //             Circle.isThenClipping(r, b);
+    //         }
+    //     }
+    // }
     public increment = (): void => { this.frame++ }
     public run = (): void => {
         this.increment()
         this.red.increment();
-        this.blue.increment();
-        this.behave();
+        // this.blue.increment();
+        // this.behave();
     }
     public draw = (): void => {
         this.red.draw();
-        this.blue.draw();
+        // this.blue.draw();
     }
     public spawnRed = (): void => {
         // spawns red dudes and then tells them what to do.
         this.red.positionAll();
     }
-    public spawnBlue = (): void => {
+    // public spawnBlue = (): void => {
         // spawns red dudes and then tells them what to do.
-        this.blue.positionAll();
-    }
+        // this.blue.positionAll();
+    // }
     public markDead = (): void => {
         for (let r of this.red.all) {
             if (r.isDead())
                 r.markDead();
         }
-        for (let b of this.blue.all) {
-            if (b.isDead())
-                b.markDead();
-        }
+        // for (let b of this.blue.all) {
+        //     if (b.isDead())
+        //         b.markDead();
+        // }
     }
     public losing = (): void => { this.lost = true }
     public winning = (): void => { this.won = true }
-    public checkWinLose = (): void => {
-        if (this.red.all.every(Circle.isDead))
-            this.losing();
-        else if (this.blue.all.every(Circle.isDead))
-            this.winning();
-    }
-    public collision = (): void => {
-        this.red.isThenClipping();
-        this.blue.isThenClipping();
-        this.redBlueIsThenClipping();
-    }
+    // public checkWinLose = (): void => {
+    //     if (this.red.all.every(Circle.isDead))
+    //         this.losing();
+    //     else if (this.blue.all.every(Circle.isDead))
+    //         this.winning();
+    // }
+    // public collision = (): void => {
+    //     // this.red.isThenClipping();
+    //     // this.blue.isThenClipping();
+    //     // this.redBlueIsThenClipping();
+    // }
     public updateDistanceTable(): void {
         this.distanceRed = this.red.distanceTable();
-        this.distanceBlue = this.blue.distanceTable();
+        // this.distanceBlue = this.blue.distanceTable();
     }
     public closestCircle = (c: Circle, color?: string): Circle => {
         if (color) {
             var group: Circle[] = {
                 'Red': this.red.all,
-                'Blue': this.blue.all
+                // 'Blue': this.blue.all
             }[color]
         }
         var minC: Circle;
@@ -132,7 +136,7 @@ class Game implements Information {
     public bottomFiveDistance = (c: Circle, color: string): any[] => {
         var distance = {
             'Red': this.distanceRed[c.id],
-            'Blue': this.distanceBlue[c.id]
+            // 'Blue': this.distanceBlue[c.id]
         }[color];
         let id = [];
         if (distance.length <= 5) {
@@ -164,22 +168,23 @@ class Game implements Information {
         for (let e of botmFive) {
             var all = {
                 'Red': this.red.all,
-                'Blue': this.blue.all
+                // 'Blue': this.blue.all
             }[color];
             clstFivePos.push(all[e[0]].pos);
         }
         return Game.moment(clstFivePos);
     }
-    public behave = (): void => {
-        for (let r of this.red.all) {
-            if (r.alive)
-                r.behave(r, this);
-        }
-        for (let b of this.blue.all) {
-            if (b.alive)
-                b.behave(b, this);
-        }
-    }
+    // public behave = (): void => {
+    //     for (let r of this.red.all) {
+    //         if (r.alive)
+    //             r.behave(r, this);
+    //     }
+    //     for (let b of this.blue.all) {
+    //         if (b.alive)
+    //             b.behave(b, this);
+    //     }
+    // }
+
     /* Returns the center of mass. All of the circles have the same mass, so
      * it's a little silly to call it by that name (it is rather, the center of
      * all the points), but it's convenient anyways now that you know what I'm

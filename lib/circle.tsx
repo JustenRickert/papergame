@@ -2,13 +2,17 @@
 
 // Circles are cool!
 class Circle {
-    public clippingForce: number = 0.011;
+    public clippingForce: number = 0.075;
     public life: Life = new Life(-1);
     public alive: boolean;
+    public timeAlive: number;
+    public behaviors: Behavior[]; // add behaviors to this array
+    public wander: Behavior = new WanderCloselyBehavior(); // Default behavior
     constructor(
         public id: number,
         public radius: number,
         public pos: Vector,
+        public dPos: Vector = new Vector(0, 0),
         public vel: Vector = Vector.random(),
         public color: string = 'Black',
         public bandColor: string = 'Black',
@@ -129,20 +133,31 @@ class Circle {
         }
     }
     public static clippingPush = (c1: Circle, c2: Circle): void => {
-        let dist = Vector.dist(c1.pos, c2.pos);
         let dirTo = Vector.minus(c1.pos, c2.pos);
         let c1Force = dirTo;
         let c2Force = Vector.times(-1, dirTo);
-        if (dist < (c1.radius + c2.radius) / 2) {
-            c1.moveForwardByVec(Vector.times(15 * c1.clippingForce, c1Force));
-            c2.moveForwardByVec(Vector.times(15 * c2.clippingForce, c2Force));
-        }
+        // if (dist < (c1.radius + c2.radius) / 2) {
+        //     c1.moveForwardByVec(Vector.times(15 * c1.clippingForce, c1Force));
+        //     c2.moveForwardByVec(Vector.times(15 * c2.clippingForce, c2Force));
+        // }
         c1.moveForwardByVec(Vector.times(c1.clippingForce, c1Force));
         c2.moveForwardByVec(Vector.times(c2.clippingForce, c2Force));
     }
     // determines whether the circles are drawing themselves over one another.
     static isClipping = (c1: Circle, c2: Circle): boolean => {
         return Vector.dist(c1.pos, c2.pos) < c1.radius + c2.radius;
+    }
+    public behave(v: Vertex, graph: Graph): void {
+        // for (let bhvr of this.behaviors) {
+        //     if (bhvr.condition(c, graph)) {
+        //         bhvr.consequence(c);
+        //         return
+        //     }
+        // }
+        if (this.wander.condition(v, graph)) {
+            this.wander.consequence(v);
+            return
+        }
     }
 }
 

@@ -7,9 +7,6 @@
  * friendly units. Otherwise, this circle is just fucking bag of meat awaiting
  * death. */
 class RedCircle extends Circle {
-    public timeAlive: number;
-    public behaviors: Behavior[];
-    public wander: Behavior = new WanderCloselyBehavior(); // Default behavior
 
     constructor(id: number, ...behaviors: Behavior[]) {
         super(id, 20, new Vector(200, 300))
@@ -23,18 +20,6 @@ class RedCircle extends Circle {
     }
     public increment() {
         this.timeAlive++
-    }
-    public behave(c: Circle, g: Game): void {
-        for (let bhvr of this.behaviors) {
-            if (bhvr.condition(c, g)) {
-                bhvr.consequence(c);
-                return
-            }
-        }
-        if (this.wander.condition(c, g)) {
-            this.wander.consequence(c);
-            return
-        }
     }
 }
 

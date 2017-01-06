@@ -11,25 +11,25 @@
  * defend other specific pieces, or attack unrelentingly---so that then the end
  * goal is one team winning over the other. */
 
-function start() {
-    game.frame++
-    game.updateDistanceTable();
-    // console.log(
-    //     game.bottomFiveDistance(game.red.all[0]),
-    //     game.momentClosestFive(game.red.all[0]))
-    clearScreen(); // TODO: There is better way to do this, clearing the screen
-    // is pretty intensive, apparently. Also, the circles and things don't need
-    // to be drawn every frame. They can just moved around, but that should be
-    // easy to do later.
-    game.collision();
-    game.run();
-    game.draw();
-    game.markDead();
-    game.checkWinLose();
-    if (game.won || game.lost)
-        return
-    requestAnimationFrame(start);
-}
+// function start() {
+//     game.frame++
+//     game.updateDistanceTable();
+//     // console.log(
+//     //     game.bottomFiveDistance(game.red.all[0]),
+//     //     game.momentClosestFive(game.red.all[0]))
+//     clearScreen(); // TODO: There is better way to do this, clearing the screen
+//     // is pretty intensive, apparently. Also, the circles and things don't need
+//     // to be drawn every frame. They can just moved around, but that should be
+//     // easy to do later.
+//     game.collision();
+//     game.run();
+//     game.draw();
+//     game.markDead();
+//     game.checkWinLose();
+//     if (game.won || game.lost)
+//         return
+//     requestAnimationFrame(start);
+// }
 
 
 var canvas: any = document.getElementById("gameCanvas");
@@ -51,9 +51,9 @@ var getMousePos = (canvas, evt) => {
 }
 
 var game: Game = new Game(100, 100);
-game.spawnRed();
-game.spawnBlue();
-start();
+// game.spawnRed();
+// game.spawnBlue();
+// start();
 
 
 

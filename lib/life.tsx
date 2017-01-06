@@ -10,7 +10,6 @@ class Life {
     public damage = (d: number): void => {
         if (this.health - d < 0) this.health = 0;
         else this.health -= d;
-        console.log(this.health)
     }
     public heal = (h: number): void => {
         if (this.health + h < this.maxHealth) this.health += h;
