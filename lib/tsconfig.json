@@ -1,7 +1,8 @@
 {
     "files": [
-        "life.tsx",
         "vector.tsx",
+        "globaldeclarations.tsx",
+        "life.tsx",
         "game.tsx",
         "circle.tsx",
         "reds.tsx",

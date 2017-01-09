@@ -18,7 +18,7 @@
 
 interface Behavior {
     condition(v: Vertex, graph: Graph): boolean;
-    consequence(v: Vertex, ...otherV: Vertex[]): any;
+    consequence(v: Vertex, graph: Graph): any;
 }
 
 /* Attack the closest target to the circle given that the attackRate allows it.
@@ -31,36 +31,36 @@ class AttackBehavior implements Behavior {
     public targetV: Vertex;
 
     public condition = (v: Vertex, graph: Graph): boolean => {
-        if (this.bAttack.canAttack()) {
-            let opposingColor: string = {
-                'Red': 'Blue',
-                'Blue': 'Red'
-            }[v.circle.color]
-            this.targetV = graph.closestDirtyVertex(v);
-            if (!this.targetV)
-                return false
-            return true;
-        }
+        // if (this.bAttack.canAttack()) {
+        //     let opposingColor: string = {
+        //         'Red': 'Blue',
+        //         'Blue': 'Red'
+        //     }[v.circle.color]
+        //     this.targetV = graph.closestDirtyVertex(v);
+        //     if (!this.targetV)
+        //         return false
+        //     return true;
+        // }
         return false;
     }
-    public consequence = (attackV: Vertex): any => {
-        // Is the attacking circle close to the defending circle?
-        if (Vector.dist(attackV.circle.pos, this.targetV.circle.pos) >
-            this.attackRange * attackV.circle.radius)
-            attackV.circle.moveToPosition(this.targetV.circle.pos);
-        // Is the angle right to lunge at the enemy?
-        else if (Math.abs(attackV.circle.angleToCircle(this.targetV.circle)) < .1) {
-            this.lungeAndAttack(attackV.circle);
-        }
-        // Turn to the defending circle so the previous predicate is true.
-        else
-            attackV.circle.turnToPosition(this.targetV.circle.pos);
+    public consequence = (attackV: Vertex, graph: Graph): any => {
+        // // Is the attacking circle close to the defending circle?
+        // if (Vector.dist(attackV.circle.pos, this.targetV.circle.pos) >
+        //     this.attackRange * attackV.circle.radius)
+        //     attackV.circle.moveToPosition(this.targetV.circle.pos, graph);
+        // // Is the angle right to lunge at the enemy?
+        // else if (Math.abs(attackV.circle.angleToCircle(this.targetV.circle)) < .1) {
+        //     this.lungeAndAttack(attackV.circle);
+        // }
+        // // Turn to the defending circle so the previous predicate is true.
+        // else
+        //     attackV.circle.turnToPosition(this.targetV.circle.pos);
     }
     public lungeAndAttack = (attackC: Circle): void => {
-        attackC.moveForwardByScalarVel(this.lungeVelocity);
-        if (Circle.isClipping(attackC, this.targetV.circle)) {
-            this.bAttack.attack(this.targetV.circle);
-        }
+        // attackC.moveForwardByScalarVel(this.lungeVelocity);
+        // if (Circle.isClipping(attackC, this.targetV.circle)) {
+        //     this.bAttack.attack(this.targetV.circle);
+        // }
     }
 }
 
@@ -94,9 +94,9 @@ class WanderCloselyBehavior implements Behavior {
     // Timed constraint. If constrained, then just stay put, maybe make him
     // randomly turn distances.
     public condition(v: Vertex, graph: Graph): boolean {
-        console.log(graph.closestCleanVertexes(v, 2));
-        console.log(graph.moment(graph.closestCleanVertexes(v, 3)));
-        this.positionToMove = graph.moment(graph.closestCleanVertexes(v, 3))
+        // console.log(Graph.mean(graph.closestCleanVertexes(v, 3)));
+        this.positionToMove = Graph.mean(graph.closestCleanVertexes(v, 3))
+        // console.log(Vector.dist(this.positionToMove, v.circle.pos))
         if (Vector.dist(this.positionToMove, v.circle.pos) >
             this.wanderRadius * v.circle.radius) {
             this.shouldRunToGroup = true;
@@ -110,21 +110,21 @@ class WanderCloselyBehavior implements Behavior {
     }
     // The circle is either far enough away to want to run towards the group, or
     // the circle wanders around aimlessly.
-    public consequence(v: Vertex): any {
+    public consequence(v: Vertex, graph: Graph): any {
         if (this.outOfBoundCheck(v))
-            v.circle.moveToPosition(new Vector(320, 320))
+            v.circle.moveToPosition(new Vector(320, 320), graph)
         if (this.shouldRunToGroup)
-            this.runToGroup(v);
+            this.runToGroup(v, graph);
         else if (this.shouldWander >= 0) {
-            this.wander(v);
+            this.wander(v, graph);
             this.shouldWander--;
         }
     }
-    private runToGroup(v: Vertex): void {
-        v.circle.moveToPosition(this.positionToMove);
+    private runToGroup(v: Vertex, graph: Graph): void {
+        v.circle.moveToPosition(this.positionToMove, graph);
     }
-    private wander(v: Vertex): void {
-        v.circle.moveToPosition(this.wanderPosition);
+    private wander(v: Vertex, graph: Graph): void {
+        v.circle.moveToPosition(this.wanderPosition, graph);
     }
     private willWander(c: Circle): void {
         if (Math.random() < 0.001) {

@@ -25,11 +25,11 @@ class BasicAttack {
         this.damage = d;
         this.lastAttack = 0;
     }
-    public canAttack = (): boolean => { return game.frame - this.lastAttack > this.attackRate; }
-    public attack = (c: Circle): void => {
-        c.life.damage(this.damage);
-        this.lastAttack = game.frame;
-    }
+    // public canAttack = (): boolean => { return game.frame - this.lastAttack > this.attackRate; }
+    // public attack = (c: Circle): void => {
+    //     c.life.damage(this.damage);
+    //     this.lastAttack = game.frame;
+    // }
 }
 
 class Effect {

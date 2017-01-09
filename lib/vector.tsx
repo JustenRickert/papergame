@@ -43,10 +43,11 @@ class Vector {
         if (angle === 0) {
             return 0
         } else {
-           return angle > 0 ? -1 : 1;
+            return angle > 0 ? -1 : 1;
         }
     }
     static random(): Vector {
         return new Vector(2 * Math.random() - 1, 2 * Math.random() - 1)
     }
+    static equalPosition = (p1: Vector, p2: Vector): boolean => p1.x === p2.x && p1.y === p2.y
 }

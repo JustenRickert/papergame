@@ -32,7 +32,10 @@ class Graph {
     constructor(circles: Circle[]) {
         this.edges = Graph.sortedEdges(Graph.getEdges(circles));
         this.vertexes = this.getVertexes(circles);
-        this.vertexDeltas = new Vector(0, 0)[this.vertexes.length];
+        this.vertexDeltas = [];
+        for (let i in this.vertexes) {
+            this.vertexDeltas.push(new Vector(0, 0));
+        }
         this.cEdges = this.edges.filter(Graph.isClean);
         this.dEdges = this.edges.filter(Graph.isDirty);
     }
@@ -44,25 +47,24 @@ class Graph {
         // let i = 0; i < this.vertexes.length; i++
         let nilVector = new Vector(0, 0);
         for (let i in this.vertexes) {
-            if (this.vertexDeltas[i] === nilVector) {
-                this.vertexes[i].circle.pos = Vector.plus(
-                    this.vertexes[i].circle.pos, this.vertexDeltas[i]);
-                this.vertexDeltas[i] = nilVector;
-            }
+            this.vertexes[i].circle.pos = Vector.plus(
+                this.vertexes[i].circle.pos, this.vertexDeltas[i]);
+            this.vertexDeltas[i] = nilVector;
         }
+        // calculate new edge distances
+        this.edges.forEach((edge) =>
+            edge.distance = Vector.dist(edge.parent.circle.pos, edge.child.circle.pos)
+            - edge.parent.circle.radius - edge.child.circle.radius)
     }
     isParentOfEdge = (circle: Circle, edge: Edge): boolean => circle === edge.parent.circle;
     getVertexes = (circles: Circle[]): Vertex[] => {
         let vertexes: Vertex[] = []
         for (let i in circles) {
-            console.log(this.edgesWithCircle(circles[i]))
             vertexes.push({
                 circle: circles[i], edges: this.edgesWithCircle(circles[i])
             })
             // vertexes.
         }
-        // console.log('vert', vertexes);
-        // console.log('edge', this.edges);
         return vertexes;
     }
     addDelta = (index: number, v: Vector): void => {
@@ -86,7 +88,6 @@ class Graph {
                 - edges[i].parent.circle.radius - edges[i].child.circle.radius
 
         }
-        // console.log('getEdges', edges);
         return edges;
     }
     edgesWithCircle = (c: Circle): Edge[] => {
@@ -100,10 +101,7 @@ class Graph {
     static sortedEdges = (edges: Edge[]): Edge[] => edges.sort(Graph.compareDist)
     // I don't use this I think...
     static produceVertex = (c: Circle): Vertex => {
-        return {
-            circle: c,
-            edges: []
-        }
+        return { circle: c, edges: [] }
     }
     static produceEdge = (v1: Vertex, v2: Vertex): Edge => {
         return {
@@ -122,18 +120,12 @@ class Graph {
     static isDirty = (e: Edge): boolean => e.parent.circle.color !== e.child.circle.color
     static isClean = (e: Edge): boolean => e.parent.circle.color === e.child.circle.color
     // collision
-    isThenClipping = (): void => {
-        for (let e of this.edges) {
-            if (e.distance <= e.child.circle.radius + e.parent.circle.radius)
-                this.clippingPush(e);
-        }
-    }
+    isThenClipping = (): void => this.edges.forEach((edge) => {
+        // console.log(edge.distance)
+        if (edge.distance <= 0)
+            this.clippingPush(edge);
+    });
     closestVertex = (v: Vertex): Vertex => v.edges[0].child
-    draw = (): void => {
-        for (let v of this.vertexes) {
-            v.circle.draw();
-        }
-    }
     closestDirtyVertex = (v: Vertex): Vertex => v.edges.filter(Graph.isDirty)[0].parent
     closestDirtyVertexes = (v: Vertex, n: number): Vertex[] => {
         if (n > v.edges.length) { n = v.edges.length }
@@ -146,18 +138,16 @@ class Graph {
         else if (n < 0) { n = 0 }
         return v.edges.filter(Graph.isClean).slice(0, n).map((edge) => edge.child)
     }
-    moment = (vertexes: Vertex[]): Vector => {
-        let vector = new Vector(0, 0);
-        for (let v of vertexes) {
-            vector = Vector.plus(vector, v.circle.pos)
-        }
-        return
+    static mean = (vertexes: Vertex[]): Vector => {
+        // Reduces the vector list to the sum of the vertex positions, then
+        // returns that value's division by the vector list's length, thus
+        // returning the mean.
+        return Vector.times(1 / vertexes.length,
+            vertexes.reduce(((accumVector, v) =>
+                Vector.plus(accumVector, v.circle.pos)), new Vector(0, 0)));
     }
-    behave = (): void => {
-        for (let i in this.vertexes) {
-            this.vertexes[i].circle.behave(this.vertexes[i], this)
-        }
-    }
+    behaviorRun = (): void => this.vertexes.forEach((v) => v.circle.behave(v, this));
+
     // The thought process behind adding delta is that I'm going to reprocess
     // information in the vertexes loops anyways, so I'm missing a speed bonus
     // here slightly. Regardless, I want an immutable state, thus I am adding
@@ -166,11 +156,64 @@ class Graph {
     // to one consistent state which persists between the read, evaluate, and
     // print parts.
     clippingPush = (edge: Edge): void => {
-        let dirTo = Vector.minus(edge.child.circle.pos, edge.child.circle.pos);
-        let multiplier = 1 - edge.distance // edge.distance should be negative if clipping
+        let dirTo = Vector.minus(edge.parent.circle.pos, edge.child.circle.pos);
+        let multiplier = (1 - edge.distance) / 25 // edge.distance should be negative if clipping
         this.addDelta(
-            this.vertexes.indexOf(edge.parent),
+            this.indexOf(edge.parent),
             Vector.times(multiplier * edge.parent.circle.clippingForce, dirTo));
+    }
+    indexOf = (vertex: Vertex): number => {
+        for (let i in this.vertexes) {
+            if (Vector.equalPosition(this.vertexes[i].circle.pos, vertex.circle.pos)) {
+                return Number(i)
+            }
+        }
+        return -1
+    }
+    indexOfCircle = (circle: Circle): number => {
+        for (let i in this.vertexes) {
+            if (Vector.equalPosition(this.vertexes[i].circle.pos, circle.pos))
+                return Number(i)
+        }
+        return -1
+    }
+
+    // Just a note, perhaps, that it is more efficient to use the built-in
+    // function drawImage instead of drawing the circles and filling them in at
+    // every frame. However, this is sort of the least of my concerns , because
+    // in the future static images may be used instead, and also the game has a
+    // ridiculous amount of overhead at this point (2016-12-21, 835 lines of
+    // code).
+    drawVertexes = (): void => this.vertexes.forEach((v): void => this.drawCircle(v.circle))
+    drawCircle = (circle: Circle): void => {
+        if (!circle.alive)
+            circle.color = 'gray'
+        // Draw the Circle
+        ctx.beginPath();
+        ctx.arc(circle.pos.x, circle.pos.y, circle.radius, 0, 2 * Math.PI);
+        ctx.closePath();
+        // color in the circle
+        ctx.fillStyle = circle.color;
+        ctx.fill();
+        // Draw the triangle at circle.direction at half radius. I think I'm going
+        // to make all projectiles squares. Triangles could be designated as
+        // structures.
+        ctx.beginPath();
+        // forward point
+        ctx.moveTo(
+            circle.pos.x + (3 * circle.radius / 4) * Math.sin(circle.direction),
+            circle.pos.y + (3 * circle.radius / 4) * Math.cos(circle.direction));
+        // point to the left (or right, I dunno and it doesn't matter)
+        ctx.lineTo(
+            circle.pos.x + (2 * circle.radius / 4) * Math.sin(circle.direction + Math.PI / 3),
+            circle.pos.y + (2 * circle.radius / 4) * Math.cos(circle.direction + Math.PI / 3));
+        ctx.lineTo(
+            circle.pos.x + (2 * circle.radius / 4) * Math.sin(circle.direction - Math.PI / 3),
+            circle.pos.y + (2 * circle.radius / 4) * Math.cos(circle.direction - Math.PI / 3));
+        // color it in
+        ctx.fillStyle = circle.bandColor;
+        ctx.fill();
+        ctx.closePath();
     }
 }
 
@@ -189,19 +232,4 @@ class Statistics {
 }
 
 
-var TEST_CIRCLES: Circle[] = [];
-for (let i = 0; i < 10; i++) {
-    TEST_CIRCLES.push(new RedCircle(i));
-    TEST_CIRCLES[i].position(12 + i, 12 + i);
-}
-var graph = new Graph(TEST_CIRCLES);
-testGameLoop();
-
-function testGameLoop() {
-    graph.behave();
-    graph.isThenClipping();
-    graph.draw();
-    graph.sumResetDelta();
-    requestAnimationFrame(testGameLoop);
-}
 

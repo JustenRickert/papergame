@@ -65,11 +65,13 @@ class Circle {
     public addVel = (vel: Vector): void => {
         this.vel = new Vector(this.vel.x + vel.x, this.vel.y + vel.y);
     }
-    public moveToPosition = (pos: Vector): void => {
+    public moveToPosition = (pos: Vector, graph: Graph): void => {
         this.turnToPosition(pos);
         if (this.angleToPosition(pos)) {
             if (Vector.dist(this.pos, pos) > .1 * this.radius) {
-                this.moveForwardByVel();
+                graph.addDelta(
+                    graph.indexOfCircle(this),
+                    new Vector(this.speed * this.vel.x, this.speed * this.vel.y));
             }
         }
     }
@@ -82,42 +84,6 @@ class Circle {
     }
     public angleToPosition = (v: Vector): number => {
         return Vector.angleBetween(this.vel, Vector.minus(v, this.pos))
-    }
-    // Just a note, perhaps, that it is more efficient to use the built-in
-    // function drawImage instead of drawing the circles and filling them in at
-    // every frame. However, this is sort of the least of my concerns , because
-    // in the future static images may be used instead, and also the game has a
-    // ridiculous amount of overhead at this point (2016-12-21, 835 lines of
-    // code).
-    public draw = (): void => {
-        if (!this.alive)
-            this.color = 'gray'
-        // Draw the Circle
-        ctx.beginPath();
-        ctx.arc(this.pos.x, this.pos.y, this.radius, 0, 2 * Math.PI);
-        ctx.closePath();
-        // color in the circle
-        ctx.fillStyle = this.color;
-        ctx.fill();
-        // Draw the triangle at this.direction at half radius. I think I'm going
-        // to make all projectiles squares. Triangles could be designated as
-        // structures.
-        ctx.beginPath();
-        // forward point
-        ctx.moveTo(
-            this.pos.x + (3 * this.radius / 4) * Math.sin(this.direction),
-            this.pos.y + (3 * this.radius / 4) * Math.cos(this.direction));
-        // point to the left (or right, I dunno and it doesn't matter)
-        ctx.lineTo(
-            this.pos.x + (2 * this.radius / 4) * Math.sin(this.direction + Math.PI / 3),
-            this.pos.y + (2 * this.radius / 4) * Math.cos(this.direction + Math.PI / 3));
-        ctx.lineTo(
-            this.pos.x + (2 * this.radius / 4) * Math.sin(this.direction - Math.PI / 3),
-            this.pos.y + (2 * this.radius / 4) * Math.cos(this.direction - Math.PI / 3));
-        // color it in
-        ctx.fillStyle = this.bandColor;
-        ctx.fill();
-        ctx.closePath();
     }
 
     public isDead = (): boolean => this.life.health === 0;
@@ -155,7 +121,7 @@ class Circle {
         //     }
         // }
         if (this.wander.condition(v, graph)) {
-            this.wander.consequence(v);
+            this.wander.consequence(v, graph);
             return
         }
     }

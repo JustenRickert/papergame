@@ -32,7 +32,7 @@
 //   function of O(n/a) for some a >= 1.
 
 interface Information {
-    red: Reds;
+    // red: Reds;
     // blue: Blues;
     distanceRed: number[][];
     distanceBlue: number[][];
@@ -49,14 +49,14 @@ class Game implements Information {
     public circles: Circle[];
 
     // Superfluous at this point...
-    public red: Reds;
+    // public red: Reds;
     // public blue: Blues;
     public distanceRed: number[][];
     public distanceBlue: number[][];
 
     constructor(redCount: number, blueCount: number) {
         this.gameCount = redCount + blueCount;
-        this.red = new Reds(redCount, this.gameCount);
+        // this.red = new Reds(redCount, this.gameCount);
         // this.blue = new Blues(blueCount, this.gameCount);
         this.frame = 0
     }
@@ -70,27 +70,27 @@ class Game implements Information {
     public increment = (): void => { this.frame++ }
     public run = (): void => {
         this.increment()
-        this.red.increment();
+        // this.red.increment();
         // this.blue.increment();
         // this.behave();
     }
     public draw = (): void => {
-        this.red.draw();
+        // this.red.draw();
         // this.blue.draw();
     }
     public spawnRed = (): void => {
         // spawns red dudes and then tells them what to do.
-        this.red.positionAll();
+        // this.red.positionAll();
     }
     // public spawnBlue = (): void => {
         // spawns red dudes and then tells them what to do.
         // this.blue.positionAll();
     // }
     public markDead = (): void => {
-        for (let r of this.red.all) {
-            if (r.isDead())
-                r.markDead();
-        }
+        // for (let r of this.red.all) {
+        //     if (r.isDead())
+        //         r.markDead();
+        // }
         // for (let b of this.blue.all) {
         //     if (b.isDead())
         //         b.markDead();
@@ -110,70 +110,70 @@ class Game implements Information {
     //     // this.redBlueIsThenClipping();
     // }
     public updateDistanceTable(): void {
-        this.distanceRed = this.red.distanceTable();
+        // this.distanceRed = this.red.distanceTable();
         // this.distanceBlue = this.blue.distanceTable();
     }
-    public closestCircle = (c: Circle, color?: string): Circle => {
-        if (color) {
-            var group: Circle[] = {
-                'Red': this.red.all,
-                // 'Blue': this.blue.all
-            }[color]
-        }
-        var minC: Circle;
-        var dist: number;
-        for (let otherC of group) {
-            if (c !== otherC) {
-                if (!minC && otherC.alive)
-                    minC = otherC
-                dist = Vector.dist(c.pos, otherC.pos);
-            } else dist = Infinity
-            if (otherC.alive && dist && Vector.dist(c.pos, minC.pos) > dist)
-                minC = otherC;
-        }
-        return minC;
-    }
-    public bottomFiveDistance = (c: Circle, color: string): any[] => {
-        var distance = {
-            'Red': this.distanceRed[c.id],
-            // 'Blue': this.distanceBlue[c.id]
-        }[color];
-        let id = [];
-        if (distance.length <= 5) {
-            for (let j in distance) {
-                id.push(j);
-            }
-            return zip(id, distance);
-        }
-        let dist = [];
-        for (let j = 0; j < 5; j++) {
-            id.push(j)
-            dist.push(distance[j]);
-        }
-        let smallest: number = dist.indexOf(min(dist));
-        for (let j = 5; j < distance.length; j++) {
-            if (distance[j] > dist[smallest]) {
-                dist[smallest] = distance[j];
-                id[smallest] = j;
-                smallest = dist.indexOf(min(dist));
-            }
-        }
-        return zip(id, dist);
-    }
+    // public closestCircle = (c: Circle, color?: string): Circle => {
+        // if (color) {
+        //     var group: Circle[] = {
+        //         'Red': this.red.all,
+        //         'Blue': this.blue.all
+        //     }[color]
+        // }
+        // var minC: Circle;
+        // var dist: number;
+        // for (let otherC of group) {
+        //     if (c !== otherC) {
+        //         if (!minC && otherC.alive)
+        //             minC = otherC
+        //         dist = Vector.dist(c.pos, otherC.pos);
+        //     } else dist = Infinity
+        //     if (otherC.alive && dist && Vector.dist(c.pos, minC.pos) > dist)
+        //         minC = otherC;
+        // }
+        // return minC;
+    // }
+    // public bottomFiveDistance = (c: Circle, color: string): any[] => {
+    //     var distance = {
+    //         'Red': this.distanceRed[c.id],
+    //         // 'Blue': this.distanceBlue[c.id]
+    //     }[color];
+    //     let id = [];
+    //     if (distance.length <= 5) {
+    //         for (let j in distance) {
+    //             id.push(j);
+    //         }
+    //         return zip(id, distance);
+    //     }
+    //     let dist = [];
+    //     for (let j = 0; j < 5; j++) {
+    //         id.push(j)
+    //         dist.push(distance[j]);
+    //     }
+    //     let smallest: number = dist.indexOf(min(dist));
+    //     for (let j = 5; j < distance.length; j++) {
+    //         if (distance[j] > dist[smallest]) {
+    //             dist[smallest] = distance[j];
+    //             id[smallest] = j;
+    //             smallest = dist.indexOf(min(dist));
+    //         }
+    //     }
+    //     return zip(id, dist);
+    // }
     /* Returns the center of mass of closest five circles to the circle
      * argument. */
-    public momentClosestFive = (c: Circle, color: string): Vector => {
-        let clstFivePos: Vector[] = [];
-        let botmFive: any[] = this.bottomFiveDistance(c, color);
-        for (let e of botmFive) {
-            var all = {
-                'Red': this.red.all,
-                // 'Blue': this.blue.all
-            }[color];
-            clstFivePos.push(all[e[0]].pos);
-        }
-        return Game.moment(clstFivePos);
-    }
+    // public momentClosestFive = (c: Circle, color: string): Vector => {
+    //     let clstFivePos: Vector[] = [];
+    //     let botmFive: any[] = this.bottomFiveDistance(c, color);
+    //     for (let e of botmFive) {
+    //         var all = {
+    //             'Red': this.red.all,
+    //             // 'Blue': this.blue.all
+    //         }[color];
+    //         clstFivePos.push(all[e[0]].pos);
+    //     }
+    //     return Game.moment(clstFivePos);
+    // }
     // public behave = (): void => {
     //     for (let r of this.red.all) {
     //         if (r.alive)
