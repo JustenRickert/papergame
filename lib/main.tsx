@@ -1,4 +1,4 @@
-// -*- mode:typescript -*-
+//-*-mode:typescript-*-
 
 /* Okay, so let there be a game board. It is to be shaped according to the
  * number of pieces that will be on the board or something. There will be two
@@ -16,13 +16,10 @@ function clearScreen() {
     // ctx.width, ctx.height);
 }
 
-
-var TEST_CIRCLES: Circle[] = [];
-for (let i = 0; i < 10; i++) {
-    TEST_CIRCLES.push(new RedCircle(i));
-    TEST_CIRCLES[i].position(12, 12);
-}
-var graph = new Graph(TEST_CIRCLES);
+var player = new Player();
+console.log('after init, player: ', player)
+console.log('fuck')
+var graph = new Graph(player);
 testGameLoop();
 
 function testGameLoop() {

@@ -7,6 +7,7 @@
         "circle.tsx",
         "reds.tsx",
         "blues.tsx",
+        "player.tsx",
         "behavior.tsx",
         "graph.tsx",
         "main.tsx"

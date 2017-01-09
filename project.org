@@ -53,3 +53,57 @@ already have added the =Life= Class, so it should be fairly straight-forward how
 exactly that will be implemented. I also fixed some bugs that weren't actually
 showing themselves in the game; and I'm honestly not really sure how it wasn't
 fucking everything up.
+* [2017-01-09 Mon] 
+I have created the graph file now that I'm using to do all of the motions on the
+screen. I figure that it will be beneficial to have appropriate graphing
+algorithms, and the graph aspect makes that more of a practical reality. The
+problem now, however, is that I am not really sure what kinds of additional
+algorithms I have available to make. Like for example, I know how to create an
+algorithm on a graph as I have it---that means being able to perform low-cost
+sorts, or some kind of "clusterizing" on them---, however I don't see quite yet
+the exact reason why I would be implementing something like this that could have
+nice performance. Thus, I'm just going to continue as I am, and see if the game
+ruins my progress at all in a way with this specific problem in mind.
+
+This graph idea also happens to give immutable state which I think will be very
+beneficial. That way at each frame I can compute what the change is going to be
+instead of what the value will be, and I won't have to worry if changing that
+value will have an important effect on anything else that I am using.
+
+I have also a somewhat improved collision system. Distances are now able to be
+calculated with each radius of the circles negated, so distance can be a
+negative value. I like this, because it gives a pretty easy way that collision
+can used to determine linear pushing forces, instead of constant pushing forces
+to deal with the objects when collision is occurring.
+
+I think that I want for the game to be more based on ranged attacks and things,
+but regardless I need a way to be able to make a game out of this. So now I'm
+going to develop a way to create party members/things that can level up, and
+enemies that can be defeated.
+
+Also, to note, right now a lot of things are deprecated. All of the reds/blues
+classes, as well as anything crazy written in main (which I think will actually
+be nothing).
+
+With previous versions of the game, there existed a technical limitation. One of
+the circle colors in the previous iterations of the game always rendered before
+the other color, giving that color an inherent advantage over the other color,
+particularly evident of the fact that it did not have an immutable state.
+Probably, when the two forces would be unequal, this different wouldn't even
+matter, however, that also included drawing, so one color was always going to be
+visible over the top of the other color. With this iteration, it is that this is
+NOT the case, which is pretty cool I think! Though to fix this issue, I should
+also implement how. The plan is thus that I will have to implement a priority
+queue or something to determine a things worthiness of being drawn towards the
+front of the screen. In any case, I would be able to implement that in O(n)
+run-time and O(n) memory which is acceptable, but I'm not sure exactly how I
+would use it just yet, so I'll just keep moving forward and see if I'll need it
+in the future.
+
+There also does seem to still be some undesirable behavior when (I think) a
+circle is trying to move in a specific direction to behave in the wander
+behavior. It happens to move really far forward before deciding to turn around,
+leaving it far from the group that it should be next to. I'm not sure if this is
+entirely bad behavior, to be honest. Keeping funny kinks in the game, makes the
+game more difficult to be perfect, which makes it more unpredictable, and more
+rewarding when interesting things happen.

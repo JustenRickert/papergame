@@ -28,10 +28,12 @@ class Graph {
     edges: Edge[];
     cEdges: Edge[];             // clean edges
     dEdges: Edge[];             // dirty edges
+    player: Player;
 
-    constructor(circles: Circle[]) {
-        this.edges = Graph.sortedEdges(Graph.getEdges(circles));
-        this.vertexes = this.getVertexes(circles);
+    constructor(player: Player) {
+        this.player = player;
+        this.edges = Graph.sortedEdges(Graph.getEdges(player.circles));
+        this.vertexes = this.getVertexes(player.circles);
         this.vertexDeltas = [];
         for (let i in this.vertexes) {
             this.vertexDeltas.push(new Vector(0, 0));
@@ -72,8 +74,8 @@ class Graph {
     }
     static getEdges = (circles: Circle[]): Edge[] => {
         let edges: Edge[] = [];
-        for (let parent of circles) {     // parent
-            for (let child of circles) { // child
+        for (let parent of circles) {
+            for (let child of circles) {
                 let edge: Edge = Graph.produceEdge(
                     { circle: parent, edges: [] },
                     { circle: child, edges: [] });
@@ -104,11 +106,7 @@ class Graph {
         return { circle: c, edges: [] }
     }
     static produceEdge = (v1: Vertex, v2: Vertex): Edge => {
-        return {
-            parent: v1,
-            child: v2,
-            distance: Vector.dist(v1.circle.pos, v2.circle.pos)
-        };
+        return { parent: v1, child: v2, distance: Vector.dist(v1.circle.pos, v2.circle.pos) };
     }
     static compareDist = (e1: Edge, e2: Edge): number => e1.distance - e2.distance
     // I am going to segregate the type of the edge by comparing the difference
@@ -121,7 +119,6 @@ class Graph {
     static isClean = (e: Edge): boolean => e.parent.circle.color === e.child.circle.color
     // collision
     isThenClipping = (): void => this.edges.forEach((edge) => {
-        // console.log(edge.distance)
         if (edge.distance <= 0)
             this.clippingPush(edge);
     });
@@ -147,7 +144,6 @@ class Graph {
                 Vector.plus(accumVector, v.circle.pos)), new Vector(0, 0)));
     }
     behaviorRun = (): void => this.vertexes.forEach((v) => v.circle.behave(v, this));
-
     // The thought process behind adding delta is that I'm going to reprocess
     // information in the vertexes loops anyways, so I'm missing a speed bonus
     // here slightly. Regardless, I want an immutable state, thus I am adding
@@ -162,6 +158,8 @@ class Graph {
             this.indexOf(edge.parent),
             Vector.times(multiplier * edge.parent.circle.clippingForce, dirTo));
     }
+    // I guess there's not a better way to do this. I would think that there
+    // would be. But its O(n), or Omega(1), but whatever.
     indexOf = (vertex: Vertex): number => {
         for (let i in this.vertexes) {
             if (Vector.equalPosition(this.vertexes[i].circle.pos, vertex.circle.pos)) {
@@ -177,13 +175,6 @@ class Graph {
         }
         return -1
     }
-
-    // Just a note, perhaps, that it is more efficient to use the built-in
-    // function drawImage instead of drawing the circles and filling them in at
-    // every frame. However, this is sort of the least of my concerns , because
-    // in the future static images may be used instead, and also the game has a
-    // ridiculous amount of overhead at this point (2016-12-21, 835 lines of
-    // code).
     drawVertexes = (): void => this.vertexes.forEach((v): void => this.drawCircle(v.circle))
     drawCircle = (circle: Circle): void => {
         if (!circle.alive)

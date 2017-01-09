@@ -142,14 +142,38 @@ class WanderCloselyBehavior implements Behavior {
  * directions periodically. There could maybe be a damage consequence upon
  * clipping an enemy circle. */
 class circleBehavior implements Behavior {
-    constructor() { }
+    constructor(v: Vertex, g: Graph) { }
     // Do the circling behavior always
-    condition() {
+    condition(v: Vertex, g: Graph): boolean {
         return true
     }
     // Move around the nearest circle clockwise, switching directions
     // periodically.
-    consequence() {
+    consequence(): any {
         return
     }
 }
+
+class simpleAimShootBehavior implements Behavior {
+    constructor() { }
+    condition(v: Vertex, g: Graph): boolean {
+        return true
+    }
+    consequence(v: Vertex, g: Graph): any {
+        return
+    }
+}
+
+class chargeOpponentBehavior implements Behavior {
+    constructor() { }
+    // Do the circling behavior always
+    condition(v: Vertex, g: Graph): boolean {
+        return true
+    }
+    // Move around the nearest circle clockwise, switching directions
+    // periodically.
+    consequence(v: Vertex, g: Graph): any {
+        return
+    }
+}
+
