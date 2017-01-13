@@ -26,6 +26,9 @@ class CollisionBucket {
                 : this.collisionBucket[index].push(v);
         }
     }
+    // TODO: This works perfectly for the bucketcount being 10, but I don't
+    // think it will be efficient if the bucketcount is lower, and it won't work
+    // if the bucketcount is greater.
     gridIndexToCollisionBucket = (bucketIndex: { x: string, y: string }): number =>
          10 * Number(bucketIndex.x) + Number(bucketIndex.y);
 }

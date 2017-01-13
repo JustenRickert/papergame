@@ -2,6 +2,7 @@
     "files": [
         "vector.tsx",
         "globaldeclarations.tsx",
+        "button.tsx",
         "life.tsx",
         "game.tsx",
         "circle.tsx",
