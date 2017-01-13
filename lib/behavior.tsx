@@ -17,8 +17,8 @@
    consequence if any of the corresponding predicates return true. */
 
 interface Behavior {
-    condition(v: Vertex, graph: Graph): boolean;
-    consequence(v: Vertex, graph: Graph): any;
+    condition(v: Vertex, game: Game): boolean;
+    consequence(v: Vertex, game: Game): any;
 }
 
 /* Attack the closest target to the circle given that the attackRate allows it.
@@ -30,37 +30,33 @@ class AttackBehavior implements Behavior {
     public lungeVelocity: number = 3;
     public targetV: Vertex;
 
-    public condition = (v: Vertex, graph: Graph): boolean => {
-        // if (this.bAttack.canAttack()) {
-        //     let opposingColor: string = {
-        //         'Red': 'Blue',
-        //         'Blue': 'Red'
-        //     }[v.circle.color]
-        //     this.targetV = graph.closestDirtyVertex(v);
-        //     if (!this.targetV)
-        //         return false
-        //     return true;
-        // }
+    public condition = (v: Vertex, game: Game): boolean => {
+        if (this.bAttack.canAttack(game)) {
+            this.targetV = game.graph.closestDirtyVertex(v);
+            if (!this.targetV)
+                return false
+            return true;
+        }
         return false;
     }
-    public consequence = (attackV: Vertex, graph: Graph): any => {
-        // // Is the attacking circle close to the defending circle?
-        // if (Vector.dist(attackV.circle.pos, this.targetV.circle.pos) >
-        //     this.attackRange * attackV.circle.radius)
-        //     attackV.circle.moveToPosition(this.targetV.circle.pos, graph);
-        // // Is the angle right to lunge at the enemy?
-        // else if (Math.abs(attackV.circle.angleToCircle(this.targetV.circle)) < .1) {
-        //     this.lungeAndAttack(attackV.circle);
-        // }
-        // // Turn to the defending circle so the previous predicate is true.
-        // else
-        //     attackV.circle.turnToPosition(this.targetV.circle.pos);
+    public consequence = (attackV: Vertex, game: Game): any => {
+        // Is the attacking circle close to the defending circle?
+        if (Vector.distance(attackV.circle.pos, this.targetV.circle.pos) >
+            this.attackRange * attackV.circle.radius)
+            attackV.circle.moveToPosition(this.targetV.circle.pos, game.graph);
+        // Is the angle right to lunge at the enemy?
+        else if (Math.abs(attackV.circle.angleToCircle(this.targetV.circle)) < .1) {
+            this.lungeAndAttack(attackV.circle, game);
+        }
+        // Turn to the defending circle so the previous predicate is true.
+        else
+            attackV.circle.turnToPosition(this.targetV.circle.pos);
     }
-    public lungeAndAttack = (attackC: Circle): void => {
-        // attackC.moveForwardByScalarVel(this.lungeVelocity);
-        // if (Circle.isClipping(attackC, this.targetV.circle)) {
-        //     this.bAttack.attack(this.targetV.circle);
-        // }
+    public lungeAndAttack = (attackC: Circle, game: Game): void => {
+        attackC.moveForwardByScalarVel(this.lungeVelocity);
+        if (Circle.isClipping(attackC, this.targetV.circle)) {
+            this.bAttack.attack(this.targetV.circle, game);
+        }
     }
 }
 
@@ -93,11 +89,9 @@ class WanderCloselyBehavior implements Behavior {
     }
     // Timed constraint. If constrained, then just stay put, maybe make him
     // randomly turn distances.
-    public condition(v: Vertex, graph: Graph): boolean {
-        // console.log(Graph.mean(graph.closestCleanVertexes(v, 3)));
-        this.positionToMove = Graph.mean(graph.closestCleanVertexes(v, 3))
-        // console.log(Vector.dist(this.positionToMove, v.circle.pos))
-        if (Vector.dist(this.positionToMove, v.circle.pos) >
+    public condition(v: Vertex, game: Game): boolean {
+        this.positionToMove = Graph.mean(game.graph.closestCleanVertexes(v, 3))
+        if (Vector.distance(this.positionToMove, v.circle.pos) >
             this.wanderRadius * v.circle.radius) {
             this.shouldRunToGroup = true;
         } else {
@@ -110,13 +104,13 @@ class WanderCloselyBehavior implements Behavior {
     }
     // The circle is either far enough away to want to run towards the group, or
     // the circle wanders around aimlessly.
-    public consequence(v: Vertex, graph: Graph): any {
+    public consequence(v: Vertex, game: Game): any {
         if (this.outOfBoundCheck(v))
-            v.circle.moveToPosition(new Vector(320, 320), graph)
+            v.circle.moveToPosition(new Vector(320, 320), game.graph)
         if (this.shouldRunToGroup)
-            this.runToGroup(v, graph);
+            this.runToGroup(v, game.graph);
         else if (this.shouldWander >= 0) {
-            this.wander(v, graph);
+            this.wander(v, game.graph);
             this.shouldWander--;
         }
     }
@@ -142,9 +136,9 @@ class WanderCloselyBehavior implements Behavior {
  * directions periodically. There could maybe be a damage consequence upon
  * clipping an enemy circle. */
 class circleBehavior implements Behavior {
-    constructor(v: Vertex, g: Graph) { }
+    constructor(v: Vertex, game: Game) { }
     // Do the circling behavior always
-    condition(v: Vertex, g: Graph): boolean {
+    condition(v: Vertex, game: Game): boolean {
         return true
     }
     // Move around the nearest circle clockwise, switching directions
@@ -156,10 +150,10 @@ class circleBehavior implements Behavior {
 
 class simpleAimShootBehavior implements Behavior {
     constructor() { }
-    condition(v: Vertex, g: Graph): boolean {
+    condition(v: Vertex, game: Game): boolean {
         return true
     }
-    consequence(v: Vertex, g: Graph): any {
+    consequence(v: Vertex, game: Game): any {
         return
     }
 }
@@ -167,12 +161,12 @@ class simpleAimShootBehavior implements Behavior {
 class chargeOpponentBehavior implements Behavior {
     constructor() { }
     // Do the circling behavior always
-    condition(v: Vertex, g: Graph): boolean {
+    condition(v: Vertex, game: Game): boolean {
         return true
     }
     // Move around the nearest circle clockwise, switching directions
     // periodically.
-    consequence(v: Vertex, g: Graph): any {
+    consequence(v: Vertex, game: Game): any {
         return
     }
 }

@@ -9,6 +9,7 @@
         "blue.tsx",
         "player.tsx",
         "behavior.tsx",
+        "collisionbucket.tsx",
         "graph.tsx",
         "main.tsx"
     ]

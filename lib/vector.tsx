@@ -26,7 +26,7 @@ class Vector {
         var div = (mag === 0) ? Infinity : 1.0 / mag;
         return Vector.times(div, v);
     }
-    static dist(v1: Vector, v2: Vector): number {
+    static distance(v1: Vector, v2: Vector): number {
         return Vector.mag(Vector.minus(v2, v1))
     }
     static cross(v1: Vector, v2: Vector) {

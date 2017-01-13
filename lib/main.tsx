@@ -17,16 +17,15 @@ function clearScreen() {
 }
 
 var player = new Player();
-console.log('after init, player: ', player)
-console.log('fuck')
-var graph = new Graph(player);
+var game = new Game(player)
 testGameLoop();
 
 function testGameLoop() {
-    graph.behaviorRun();
-    graph.isThenClipping();
+    game.graph.behaviorRun(game);
+    game.graph.isThenClipping();
     clearScreen();
-    graph.drawVertexes();
-    graph.sumResetDelta();
+    game.graph.drawVertexes();
+    game.graph.sumResetDelta();
+    game.increment();
     requestAnimationFrame(testGameLoop);
 }

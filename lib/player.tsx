@@ -3,6 +3,7 @@ class Player {
     redCircles: Circle[] = [];
     blueCircles: Circle[] = [];
     circles: Circle[];
+
     constructor() {
         for (let i = 0; i < 10; i++) {
             this.redCircles.push(new RedCircle(i));
@@ -13,6 +14,8 @@ class Player {
             this.blueCircles[i].position(600, 600);
         }
         this.circles = this.allCircles();
+        this.circles.map((circle) => circle.behaviors.push(new AttackBehavior()));
     }
+
     allCircles = () => this.redCircles.concat(this.blueCircles);
 }

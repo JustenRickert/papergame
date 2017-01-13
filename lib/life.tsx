@@ -20,16 +20,17 @@ class Life {
 class BasicAttack {
     public damage: number;
     public lastAttack: number;
-    public attackRate: number = 90;
+    public attackRate: number = 360;
     constructor(d: number) {
         this.damage = d;
         this.lastAttack = 0;
     }
-    // public canAttack = (): boolean => { return game.frame - this.lastAttack > this.attackRate; }
-    // public attack = (c: Circle): void => {
-    //     c.life.damage(this.damage);
-    //     this.lastAttack = game.frame;
-    // }
+    public canAttack = (game: Game): boolean =>
+        game.frame - this.lastAttack > this.attackRate;
+    public attack = (c: Circle, game: Game): void => {
+        c.life.damage(this.damage);
+        this.lastAttack = game.frame;
+    }
 }
 
 class Effect {

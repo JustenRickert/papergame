@@ -11,9 +11,9 @@
  *   project. */
 
 interface Edge {
-    parent: Vertex,             // parent
-    child: Vertex,              // child
-    distance: number            // distance
+    parent: Vertex,
+    child: Vertex,
+    dist: number
 }
 
 interface Vertex {
@@ -24,26 +24,43 @@ interface Vertex {
 // Dirty edges and Clean edges
 class Graph {
     vertexes: Vertex[];
-    vertexDeltas: Vector[];
+    vertexDeltas: Vector[] = [];
     edges: Edge[];
-    cEdges: Edge[];             // clean edges
-    dEdges: Edge[];             // dirty edges
     player: Player;
 
+    size: { height: number, width: number };
+    collisionBucket: CollisionBucket;
+
     constructor(player: Player) {
+        let nilVector = new Vector(0, 0);
         this.player = player;
         this.edges = Graph.sortedEdges(Graph.getEdges(player.circles));
         this.vertexes = this.getVertexes(player.circles);
-        this.vertexDeltas = [];
         for (let i in this.vertexes) {
-            this.vertexDeltas.push(new Vector(0, 0));
+            this.vertexDeltas[i] = nilVector;
         }
-        this.cEdges = this.edges.filter(Graph.isClean);
-        this.dEdges = this.edges.filter(Graph.isDirty);
+        this.size = { height: canvas.height, width: canvas.width };
+        this.collisionBucket = new CollisionBucket(this);
     }
-    // I can't figure out how to do this with map... There might be performance
-    // increases in using map instead of iterating over the array.
-    //
+    gridIndexOf = (vertex: Vertex, line: { x: number[], y: number[] }): { x: string, y: string } => {
+        let x: string;
+        let y: string;
+        for (let i = 1; i <= line.x.length; i++) {
+            if (vertex.circle.pos.x < line.x[i]) {
+                x = String(i - 1);
+                break;
+            }
+        }
+        for (let i = 1; i <= line.y.length; i++) {
+            if (vertex.circle.pos.x < line.x[i]) {
+                y = String(i - 1);
+                break;
+            }
+        }
+        if (!x) x = String(line.x.length);
+        if (!y) y = String(line.y.length);
+        return { x, y }
+    }
     // Sums the delta with current position, then resets the delta.
     sumResetDelta = (): void => {
         // let i = 0; i < this.vertexes.length; i++
@@ -53,12 +70,21 @@ class Graph {
                 this.vertexes[i].circle.pos, this.vertexDeltas[i]);
             this.vertexDeltas[i] = nilVector;
         }
-        // calculate new edge distances
-        this.edges.forEach((edge) =>
-            edge.distance = Vector.dist(edge.parent.circle.pos, edge.child.circle.pos)
-            - edge.parent.circle.radius - edge.child.circle.radius)
+        // calculate new edge distances & sort
+        for (let i in this.edges) {
+            this.edges[i].dist =
+                Vector.distance(this.edges[i].parent.circle.pos, this.edges[i].child.circle.pos)
+                - this.edges[i].parent.circle.radius
+                - this.edges[i].child.circle.radius;
+        }
+        this.edges = Graph.sortedEdges(this.edges);
+        // place new edges inside of vertexes
+        for (let i in this.vertexes) {
+            this.vertexes[i].edges = this.edgesWithCircle(this.vertexes[i].circle);
+        }
     }
-    isParentOfEdge = (circle: Circle, edge: Edge): boolean => circle === edge.parent.circle;
+    isParentOfEdge = (circle: Circle, edge: Edge): boolean =>
+        circle === edge.parent.circle;
     getVertexes = (circles: Circle[]): Vertex[] => {
         let vertexes: Vertex[] = []
         for (let i in circles) {
@@ -85,10 +111,9 @@ class Graph {
             }
         }
         for (let i in edges) {
-            edges[i].distance =
-                Vector.dist(edges[i].parent.circle.pos, edges[i].child.circle.pos)
+            edges[i].dist =
+                Vector.distance(edges[i].parent.circle.pos, edges[i].child.circle.pos)
                 - edges[i].parent.circle.radius - edges[i].child.circle.radius
-
         }
         return edges;
     }
@@ -106,34 +131,36 @@ class Graph {
         return { circle: c, edges: [] }
     }
     static produceEdge = (v1: Vertex, v2: Vertex): Edge => {
-        return { parent: v1, child: v2, distance: Vector.dist(v1.circle.pos, v2.circle.pos) };
+        return {
+            parent: v1,
+            child: v2,
+            dist: Vector.distance(v1.circle.pos, v2.circle.pos)
+        };
     }
-    static compareDist = (e1: Edge, e2: Edge): number => e1.distance - e2.distance
-    // I am going to segregate the type of the edge by comparing the difference
-    // of the circles. If the colors of the circles are the same, then they are
-    // called dirty. If the colors of the circles are different, then they are
-    // called clean.
-    smallestCEdge = (c1: Circle): Edge => this.cEdges[0]
-    smallestDEdge = (c1: Circle): Edge => this.dEdges[0]
-    static isDirty = (e: Edge): boolean => e.parent.circle.color !== e.child.circle.color
-    static isClean = (e: Edge): boolean => e.parent.circle.color === e.child.circle.color
+    static compareDist = (e1: Edge, e2: Edge): number => e1.dist - e2.dist
+    static isDirty = (e: Edge): boolean =>
+        e.parent.circle.color !== e.child.circle.color;
+    static isClean = (e: Edge): boolean =>
+        e.parent.circle.color === e.child.circle.color;
     // collision
     isThenClipping = (): void => this.edges.forEach((edge) => {
-        if (edge.distance <= 0)
+        if (edge.dist <= 0)
             this.clippingPush(edge);
     });
-    closestVertex = (v: Vertex): Vertex => v.edges[0].child
-    closestDirtyVertex = (v: Vertex): Vertex => v.edges.filter(Graph.isDirty)[0].parent
+    closestVertex = (v: Vertex): Vertex => v.edges[0].child;
+    closestDirtyVertex = (v: Vertex): Vertex => {
+        return v.edges.filter(Graph.isDirty)[0].child;
+    }
     closestDirtyVertexes = (v: Vertex, n: number): Vertex[] => {
         if (n > v.edges.length) { n = v.edges.length }
         else if (n < 0) { n = 0 }
         return v.edges.filter(Graph.isDirty).slice(0, n).map((edge) => edge.child)
     }
-    closestCleanVertex = (v: Vertex): Vertex => v.edges.filter(Graph.isClean)[0].parent
+    closestCleanVertex = (v: Vertex): Vertex => v.edges.filter(Graph.isClean)[0].child;
     closestCleanVertexes = (v: Vertex, n: number): Vertex[] => {
-        if (n > v.edges.length) { n = v.edges.length }
-        else if (n < 0) { n = 0 }
-        return v.edges.filter(Graph.isClean).slice(0, n).map((edge) => edge.child)
+        if (n > v.edges.length) { n = v.edges.length; }
+        else if (n < 0) { n = 0; }
+        return v.edges.filter(Graph.isClean).slice(0, n).map((edge) => edge.child);
     }
     static mean = (vertexes: Vertex[]): Vector => {
         // Reduces the vector list to the sum of the vertex positions, then
@@ -143,17 +170,18 @@ class Graph {
             vertexes.reduce(((accumVector, v) =>
                 Vector.plus(accumVector, v.circle.pos)), new Vector(0, 0)));
     }
-    behaviorRun = (): void => this.vertexes.forEach((v) => v.circle.behave(v, this));
+    behaviorRun = (game: Game): void => this.vertexes.forEach((v) => v.circle.behave(v, game));
     // The thought process behind adding delta is that I'm going to reprocess
     // information in the vertexes loops anyways, so I'm missing a speed bonus
     // here slightly. Regardless, I want an immutable state, thus I am adding
     // deltas which will be processed at a different part of the game running
     // loop. That is, something like REPL (read eval print loop). I want there
-    // to one consistent state which persists between the read, evaluate, and
-    // print parts.
+    // to exist one consistent state which persists between the read, evaluate,
+    // and print parts.
     clippingPush = (edge: Edge): void => {
         let dirTo = Vector.minus(edge.parent.circle.pos, edge.child.circle.pos);
-        let multiplier = (1 - edge.distance) / 25 // edge.distance should be negative if clipping
+        // edge.distance should be negative if clipping
+        let multiplier = (1 - edge.dist) / 25
         this.addDelta(
             this.indexOf(edge.parent),
             Vector.times(multiplier * edge.parent.circle.clippingForce, dirTo));
@@ -221,6 +249,3 @@ class Statistics {
         return Vector.times(1 / vertexes.length, totalVec);
     }
 }
-
-
-

@@ -31,14 +31,7 @@
 //   O(n) functions from the distance ideas could be slightly improved to be a
 //   function of O(n/a) for some a >= 1.
 
-interface Information {
-    // red: Reds;
-    // blue: Blues;
-    distanceRed: number[][];
-    distanceBlue: number[][];
-}
-
-class Game implements Information {
+class Game {
     public won: boolean = false;
     public lost: boolean = false;
 
@@ -46,7 +39,7 @@ class Game implements Information {
     public gameCount: number;
 
     public graph: Graph;
-    public circles: Circle[];
+    public circles: Circle[];   // this might not be necessary... uses more ram
 
     // Superfluous at this point...
     // public red: Reds;
@@ -54,25 +47,15 @@ class Game implements Information {
     public distanceRed: number[][];
     public distanceBlue: number[][];
 
-    constructor(redCount: number, blueCount: number) {
-        this.gameCount = redCount + blueCount;
-        // this.red = new Reds(redCount, this.gameCount);
-        // this.blue = new Blues(blueCount, this.gameCount);
+    constructor(player:Player) {
+        this.circles = player.allCircles();
+        this.graph = new Graph(player);
+        this.graph
         this.frame = 0
     }
-    // public redBlueIsThenClipping = (): void => {
-    //     for (let r of this.red.all) { // r for red
-    //         for (let b of this.blue.all) { // b for blue
-    //             Circle.isThenClipping(r, b);
-    //         }
-    //     }
-    // }
     public increment = (): void => { this.frame++ }
     public run = (): void => {
         this.increment()
-        // this.red.increment();
-        // this.blue.increment();
-        // this.behave();
     }
     public draw = (): void => {
         // this.red.draw();

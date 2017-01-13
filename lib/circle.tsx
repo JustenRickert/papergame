@@ -68,7 +68,7 @@ class Circle {
     public moveToPosition = (pos: Vector, graph: Graph): void => {
         this.turnToPosition(pos);
         if (this.angleToPosition(pos)) {
-            if (Vector.dist(this.pos, pos) > .1 * this.radius) {
+            if (Vector.distance(this.pos, pos) > .1 * this.radius) {
                 graph.addDelta(
                     graph.indexOfCircle(this),
                     new Vector(this.speed * this.vel.x, this.speed * this.vel.y));
@@ -111,17 +111,17 @@ class Circle {
     }
     // determines whether the circles are drawing themselves over one another.
     static isClipping = (c1: Circle, c2: Circle): boolean => {
-        return Vector.dist(c1.pos, c2.pos) < c1.radius + c2.radius;
+        return Vector.distance(c1.pos, c2.pos) < c1.radius + c2.radius;
     }
-    public behave(v: Vertex, graph: Graph): void {
-        // for (let bhvr of this.behaviors) {
-        //     if (bhvr.condition(c, graph)) {
-        //         bhvr.consequence(c);
-        //         return
-        //     }
-        // }
-        if (this.wander.condition(v, graph)) {
-            this.wander.consequence(v, graph);
+    public behave(v: Vertex, game: Game): void {
+        for (let bhvr of this.behaviors) {
+            if (bhvr.condition(v, game)) {
+                bhvr.consequence(v, game);
+                return
+            }
+        }
+        if (this.wander.condition(v, game)) {
+            this.wander.consequence(v, game);
             return
         }
     }
