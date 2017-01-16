@@ -21,11 +21,15 @@ var game = new Game(player)
 testGameLoop();
 
 function testGameLoop() {
-    game.graph.behaviorRun(game);
-    game.graph.isThenClipping();
-    clearScreen();
-    game.graph.drawVertexes();
-    game.graph.sumResetDelta();
-    game.increment();
+    if (game.running) {
+        game.graph.behaviorRun(game);
+        game.graph.isThenClipping();
+        clearScreen();
+        game.graph.drawVertexes();
+        game.graph.sumResetDelta();
+
+        game.increment();
+    } else {
+    }
     requestAnimationFrame(testGameLoop);
 }

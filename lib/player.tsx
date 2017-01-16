@@ -1,16 +1,17 @@
 /*-*-mode:typescript-*-*/
 class Player {
+
     redCircles: Circle[] = [];
     blueCircles: Circle[] = [];
     circles: Circle[];
 
     constructor() {
-        for (let i = 0; i < 25; i++) {
+        for (let i = 0; i < 55; i++) {
             this.redCircles.push(new RedCircle(i));
             this.redCircles[i].position(40, 40);
         }
-        for (let i = 0; i < 25; i++) {
-            this.blueCircles.push(new BlueCircle(10+i));
+        for (let i = 0; i < 55; i++) {
+            this.blueCircles.push(new BlueCircle(10 + i));
             this.blueCircles[i].position(600, 600);
         }
         this.circles = this.allCircles();
@@ -18,4 +19,14 @@ class Player {
     }
 
     allCircles = () => this.redCircles.concat(this.blueCircles);
+}
+
+class UnitCard {
+    circle: Circle;
+    experience: number;
+
+    constructor(circle: Circle) {
+        this.circle = circle;
+        this.experience = 0;
+    }
 }

@@ -1,14 +1,6 @@
 // -*-mode:typescript-*-
 
 /* Graph idea */
-/*   A Graph G = (V, E) contains Vertices and Edges. The Vertexes correspond
- *   directly to the Circles, and the edges correspond to the simple distance
- *   between each of the vertices. I am going to use the notion of an edge being
- *   dirty to be an edge connecting two circles of different colors, and
- *   therefore a clean edge is an edge connecting two circles of same color. */
-
-/*   Just as well, this is my first foray into functional programming for the
- *   project. */
 
 interface Edge {
     parent: Vertex,
@@ -21,7 +13,6 @@ interface Vertex {
     edges: Edge[]
 }
 
-// Dirty edges and Clean edges
 class Graph {
     vertexes: Vertex[];
     vertexDeltas: Vector[] = [];
@@ -42,7 +33,9 @@ class Graph {
         this.size = { height: canvas.height, width: canvas.width };
         this.collisionBucket = new CollisionBucket(this);
     }
-    gridIndexOf = (vertex: Vertex, line: { x: number[], y: number[] }): { x: string, y: string } => {
+
+    gridIndexOf = (vertex: Vertex, line: { x: number[], y: number[] }):
+        { x: string, y: string } => {
         let x: string;
         let y: string;
         for (let i = 1; i <= line.x.length; i++) {
@@ -61,6 +54,7 @@ class Graph {
         if (!y) y = String(line.y.length);
         return { x, y }
     }
+
     // Sums the delta with current position, then resets the delta.
     sumResetDelta = (): void => {
         // let i = 0; i < this.vertexes.length; i++
@@ -83,8 +77,10 @@ class Graph {
             this.vertexes[i].edges = this.edgesWithCircle(this.vertexes[i].circle);
         }
     }
+
     isParentOfEdge = (circle: Circle, edge: Edge): boolean =>
         circle === edge.parent.circle;
+
     getVertexes = (circles: Circle[]): Vertex[] => {
         let vertexes: Vertex[] = []
         for (let i in circles) {
@@ -95,9 +91,11 @@ class Graph {
         }
         return vertexes;
     }
+
     addDelta = (index: number, v: Vector): void => {
         this.vertexDeltas[index] = Vector.plus(this.vertexDeltas[index], v);
     }
+
     static getEdges = (circles: Circle[]): Edge[] => {
         let edges: Edge[] = [];
         for (let parent of circles) {
@@ -117,19 +115,23 @@ class Graph {
         }
         return edges;
     }
+
     edgesWithCircle = (c: Circle): Edge[] => {
         return this.edges.filter(this.isParentOfEdge.bind(this, c));
     }
+
     // This sorting algorithm is the built-in one. The JavaScript developers are
     // probably really clever, so it's a strong bet this is pretty good to use.
     // However, in the future it may be worth investigating some time into if
     // that really is not the case! It would ideally operate close to an O(n)
     // function. Probably the upper bound is O(n*log(n)).
     static sortedEdges = (edges: Edge[]): Edge[] => edges.sort(Graph.compareDist)
+
     // I don't use this I think...
     static produceVertex = (c: Circle): Vertex => {
         return { circle: c, edges: [] }
     }
+
     static produceEdge = (v1: Vertex, v2: Vertex): Edge => {
         return {
             parent: v1,
@@ -137,31 +139,48 @@ class Graph {
             dist: Vector.distance(v1.circle.pos, v2.circle.pos)
         };
     }
+
     static compareDist = (e1: Edge, e2: Edge): number => e1.dist - e2.dist
+
     static isDirty = (e: Edge): boolean =>
         e.parent.circle.color !== e.child.circle.color;
+
     static isClean = (e: Edge): boolean =>
         e.parent.circle.color === e.child.circle.color;
+
     // collision
-    isThenClipping = (): void => this.edges.forEach((edge) => {
-        if (edge.dist <= 0)
-            this.clippingPush(edge);
-    });
+    isThenClipping = (): void => {
+        // So, this.edges is ordered, meaning when we stop finding colliding
+        // edges, there won't be anymore colliding edges.
+        for (let e of this.edges) {
+            if (e.dist <= 0)
+                this.clippingPush(e);
+            else
+                break
+        }
+    }
+
+
     closestVertex = (v: Vertex): Vertex => v.edges[0].child;
+
     closestDirtyVertex = (v: Vertex): Vertex => {
         return v.edges.filter(Graph.isDirty)[0].child;
     }
+
     closestDirtyVertexes = (v: Vertex, n: number): Vertex[] => {
         if (n > v.edges.length) { n = v.edges.length }
         else if (n < 0) { n = 0 }
         return v.edges.filter(Graph.isDirty).slice(0, n).map((edge) => edge.child)
     }
+
     closestCleanVertex = (v: Vertex): Vertex => v.edges.filter(Graph.isClean)[0].child;
+
     closestCleanVertexes = (v: Vertex, n: number): Vertex[] => {
         if (n > v.edges.length) { n = v.edges.length; }
         else if (n < 0) { n = 0; }
         return v.edges.filter(Graph.isClean).slice(0, n).map((edge) => edge.child);
     }
+
     static mean = (vertexes: Vertex[]): Vector => {
         // Reduces the vector list to the sum of the vertex positions, then
         // returns that value's division by the vector list's length, thus
@@ -170,7 +189,9 @@ class Graph {
             vertexes.reduce(((accumVector, v) =>
                 Vector.plus(accumVector, v.circle.pos)), new Vector(0, 0)));
     }
+
     behaviorRun = (game: Game): void => this.vertexes.forEach((v) => v.circle.behave(v, game));
+
     // The thought process behind adding delta is that I'm going to reprocess
     // information in the vertexes loops anyways, so I'm missing a speed bonus
     // here slightly. Regardless, I want an immutable state, thus I am adding
@@ -186,6 +207,7 @@ class Graph {
             this.indexOf(edge.parent),
             Vector.times(multiplier * edge.parent.circle.clippingForce, dirTo));
     }
+
     // I guess there's not a better way to do this. I would think that there
     // would be. But its O(n), or Omega(1), but whatever.
     indexOf = (vertex: Vertex): number => {
@@ -196,6 +218,7 @@ class Graph {
         }
         return -1
     }
+
     indexOfCircle = (circle: Circle): number => {
         for (let i in this.vertexes) {
             if (Vector.equalPosition(this.vertexes[i].circle.pos, circle.pos))
@@ -203,7 +226,9 @@ class Graph {
         }
         return -1
     }
+
     drawVertexes = (): void => this.vertexes.forEach((v): void => this.drawCircle(v.circle))
+
     drawCircle = (circle: Circle): void => {
         if (!circle.alive)
             circle.color = 'gray'

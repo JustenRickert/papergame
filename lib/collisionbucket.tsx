@@ -1,3 +1,8 @@
+/** I think my implementing this was a mistake. If I'm sorting every frame,
+ *  that's the method for organizing what needs to be collided. Therefore, this
+ *  is superfluous. */
+
+// TODO: I may not even need this. Think about deleting it.
 class CollisionBucket {
 
     lines: { x: number[], y: number[] };
@@ -30,5 +35,5 @@ class CollisionBucket {
     // think it will be efficient if the bucketcount is lower, and it won't work
     // if the bucketcount is greater.
     gridIndexToCollisionBucket = (bucketIndex: { x: string, y: string }): number =>
-         10 * Number(bucketIndex.x) + Number(bucketIndex.y);
+        10 * Number(bucketIndex.x) + Number(bucketIndex.y);
 }

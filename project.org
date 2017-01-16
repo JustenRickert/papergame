@@ -1,4 +1,46 @@
--*- mode: org -*-
+# -*- mode: org -*-
+
+* TODO
+- Basic menu system
+  - Experience/leveling/upgrading
+  - Statistics
+  - Quests/Money
+- Unit
+  - Experience gaining
+  - Leveling/advancing
+  - New units? Evolving units? I think I like the idea of evolving units.
+- Movement
+  - I still need to add a shit load of behaviors. I'm thinking I can maybe each
+    of the behaviors have longer cooldowns, then let each of them have a bunch
+    of them. Then I want to come up with a simple .json format something or
+    other to keep track of special unit types, having a slew of behaviors at
+    their disposal.
+- Saving
+  - Probably, I'm going to need a lot of the other stuff as above for figuring
+    out how to get the game to save itself, but I will list it regardless.
+
+* [2017-01-13 Fri]
+The source code of the game is starting to seem rather complex. I'm spending
+more and more time thinking less about how I'm going to be able to do what I
+want to do efficiently, and a lot of the times not having any idea at all about
+what I am to do to solve a problem.
+
+So today, I released some internal things, and improved various parts of it. The
+game loop seems to be in place rather nicely, and it should be trivial to add
+additional things to it. My internal work I think was mostly to solve bullet
+collision. If there are going to be a lot of bullets on the canvas, then I think
+that it will be necessary to come up with a better solution for calculating
+collisions efficiently. The idea that I came up is based off the same concept
+that a bucket sort algorithm has. I'm first going to, so to speak, align a
+series of pails on the ground, and then place all of the vertexes into said
+pails appropriated by the vertexes' position on the graph. The grid is broken up
+by lines. Each vertex is placed according to the square of the graph that the
+vertex is placed on. Then the grid is flattened into an array.
+
+In this state, the collision can be made smart enough to run only on the
+vertexes in the same or adjacent grid locations. This reduction corresponds to
+something like O((n/a)^{2}), where a > 0, and O(n^{2}) is the runtime ordinarily for
+the collision checking algorithm on /n/ vertexes.
 
 * [2016-12-16 Fri]
 Okay, so this is just going to be like a developer diary sort of thing so I can
@@ -53,7 +95,7 @@ already have added the =Life= Class, so it should be fairly straight-forward how
 exactly that will be implemented. I also fixed some bugs that weren't actually
 showing themselves in the game; and I'm honestly not really sure how it wasn't
 fucking everything up.
-* [2017-01-09 Mon] 
+* [2017-01-09 Mon]
 I have created the graph file now that I'm using to do all of the motions on the
 screen. I figure that it will be beneficial to have appropriate graphing
 algorithms, and the graph aspect makes that more of a practical reality. The

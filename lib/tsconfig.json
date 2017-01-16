@@ -1,5 +1,7 @@
 {
     "files": [
+        "menu.tsx",
+        "graph.tsx",
         "vector.tsx",
         "globaldeclarations.tsx",
         "button.tsx",
