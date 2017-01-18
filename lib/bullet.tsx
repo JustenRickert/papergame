@@ -16,11 +16,36 @@ class Bullet {
     }
 
     behave = (game: Game): void => {
-        // if (/* Colliding with closest vertex */) {
+        // if (/* Clipping with closest vertex */) {
         // } else
         //     this.moveForward(game);
     }
+
+    isThenClipping = (graph: Graph, cb: CollisionBucket): boolean => {
+        let vertexes = cb.vertexesAtIndex(cb.gridIndexOf(this.pos));
+        for (let v of vertexes) {
+            if (this.isClippingVertex(v)) {
+                this.clip(v);
+                break;
+            }
+            return false
+        }
+        return true
+    }
+
+    clip = (v: Vertex) => {
+        // Damage vertex circle
+        // Make the bullet disappear
+    }
+
+    isClippingVertex = (vertex: Vertex): boolean =>
+        Vector.distance(vertex.circle.pos, this.pos) > vertex.circle.radius + this.size;
+
     moveForward = (game): void => {
         this.pos = Vector.plus(this.pos, this.vel);
     }
+
+    drawBullet = (sideLength: number): void =>
+        Shape.drawRect(this.pos, this.vel);
+
 }

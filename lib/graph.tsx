@@ -35,27 +35,6 @@ class Graph {
         this.collisionBucket = new CollisionBucket(this);
     }
 
-    gridIndexOf = (vertex: Vertex, line: { x: number[], y: number[] }):
-        { x: string, y: string } => {
-        let x: string;
-        let y: string;
-        for (let i = 1; i <= line.x.length; i++) {
-            if (vertex.circle.pos.x < line.x[i]) {
-                x = String(i - 1);
-                break;
-            }
-        }
-        for (let i = 1; i <= line.y.length; i++) {
-            if (vertex.circle.pos.x < line.x[i]) {
-                y = String(i - 1);
-                break;
-            }
-        }
-        if (!x) x = String(line.x.length);
-        if (!y) y = String(line.y.length);
-        return { x, y }
-    }
-
     // Sums the delta with current position, then resets the delta.
     sumResetDelta = (): void => {
         // let i = 0; i < this.vertexes.length; i++
@@ -90,7 +69,6 @@ class Graph {
             vertexes.push({
                 circle: circles[i], edges: this.edgesWithCircle(circles[i])
             })
-            // vertexes.
         }
         return vertexes;
     }
