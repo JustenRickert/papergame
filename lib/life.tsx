@@ -33,5 +33,17 @@ class BasicAttack {
     }
 }
 
+class BasicShoot {
+    public damage: number;
+    public lastAttack: number;
+    public attackRate: number = 500;
+    public canAttack = (game: Game): boolean =>
+        game.frame - this.lastAttack > this.attackRate;
+    public attack = (c: Circle, game: Game): void => {
+        c.life.damage(this.damage);
+        this.lastAttack = game.frame;
+    }
+}
+
 class Effect {
 }

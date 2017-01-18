@@ -127,11 +127,10 @@ class Circle {
     }
 
     // determines whether the circles are drawing themselves over one another.
-    static isClipping = (c1: Circle, c2: Circle): boolean => {
-        return Vector.distance(c1.pos, c2.pos) < c1.radius + c2.radius;
-    }
+    static isClipping = (c1: Circle, c2: Circle): boolean =>
+        Vector.distance(c1.pos, c2.pos) < c1.radius + c2.radius;
 
-    public behave(v: Vertex, game: Game): void {
+    behave = (v: Vertex, game: Game): void => {
         for (let bhvr of this.behaviors) {
             if (bhvr.condition(v, game)) {
                 bhvr.consequence(v, game);

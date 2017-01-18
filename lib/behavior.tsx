@@ -149,13 +149,30 @@ class circleBehavior implements Behavior {
 }
 
 class simpleAimShootBehavior implements Behavior {
-    constructor() { }
-    condition(v: Vertex, game: Game): boolean {
-        return true
+    public bShoot: BasicShoot = new BasicAttack(1);
+    public attackRange: number = 300;
+    public targetV: Vertex;
+
+    constructor() {
     }
-    consequence(v: Vertex, game: Game): any {
-        return
+    condition = (v: Vertex, game: Game): boolean => {
+        if (this.bShoot.canAttack(game)) {
+            this.targetV = game.graph.closestDirtyVertex(v);
+            return true
+        }
+        return false
     }
+    consequence = (v: Vertex, game: Game): any => {
+        v.circle.turnToPosition(this.targetV.circle.pos);
+        if (Math.abs(v.circle.angleToCircle(this.targetV.circle)) < .05) {
+            this.shootBullet(v, game);
+        }
+    }
+    shootBullet = (v: Vertex, game: Game): void =>
+        Bullet.shoot(
+            v.circle.pos,
+            Vector.minus(this.targetV.circle.pos, v.circle.pos),
+            game.graph)
 }
 
 class chargeOpponentBehavior implements Behavior {

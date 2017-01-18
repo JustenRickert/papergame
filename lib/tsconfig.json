@@ -1,6 +1,7 @@
 {
     "files": [
         "menu.tsx",
+        "bullet.tsx",
         "graph.tsx",
         "vector.tsx",
         "globaldeclarations.tsx",
