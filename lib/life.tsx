@@ -35,12 +35,18 @@ class BasicAttack {
 
 class BasicShoot {
     public damage: number;
-    public lastAttack: number;
+    public lastAttack: number = 0;
     public attackRate: number = 500;
-    public canAttack = (game: Game): boolean =>
-        game.frame - this.lastAttack > this.attackRate;
-    public attack = (c: Circle, game: Game): void => {
-        c.life.damage(this.damage);
+
+    constructor(damage: number) {
+        this.damage = damage;
+    }
+
+    canAttack = (game: Game): boolean => {
+        return game.frame - this.lastAttack > this.attackRate;
+    }
+
+    resetAttack = (): void => {
         this.lastAttack = game.frame;
     }
 }

@@ -81,17 +81,37 @@ class Shape {
     }
 
     static drawRect = (position: Vector, direction: Vector): void => {
-        let forwardPoint = Shape.forwardPoint(2, position, direction);
-        let frontLeft = Vector.plus(forwardPoint, Vector.rotate(-Math.PI / 2, direction));
-        let frontRight = Vector.plus(forwardPoint, Vector.rotate(Math.PI / 2, direction));
+        direction = Vector.times(1 / Vector.mag(direction), direction);
+
+        let forwardPoint = Shape.forwardPoint(16, position, direction);
+        let frontLeft = Vector.plus(forwardPoint, Vector.times(2, Vector.rotate(-Math.PI / 2, direction)));
+        let frontRight = Vector.plus(forwardPoint, Vector.times(2, Vector.rotate(Math.PI / 2, direction)));
 
         let backwardPoint = Shape.forwardPoint(1, position, Vector.times(-1, direction));
-        let backLeft = Vector.plus(backwardPoint, Vector.rotate(Math.PI / 2, direction));
-        let backRight = Vector.plus(backwardPoint, Vector.rotate(-Math.PI / 2, direction));
+        let backLeft = Vector.plus(backwardPoint, Vector.times(2, Vector.rotate(Math.PI / 2, direction)));
+        let backRight = Vector.plus(backwardPoint, Vector.times(2, Vector.rotate(-Math.PI / 2, direction)));
 
         ctx.beginPath();
         ctx.moveTo(frontLeft.x, frontLeft.y);
         ctx.lineTo(frontRight.x, frontRight.y);
+        ctx.lineTo(backLeft.x, backLeft.y);
+        ctx.lineTo(backRight.x, backRight.y);
+
+        ctx.fill();
+        ctx.closePath();
+    }
+
+    static drawThinTriangle = (position: Vector, direction: Vector): void => {
+        direction = Vector.times(1 / Vector.mag(direction), direction);
+
+        let forwardPoint = Shape.forwardPoint(8, position, direction);
+
+        let backwardPoint = Shape.forwardPoint(8, position, Vector.times(-1, direction));
+        let backLeft = Vector.plus(backwardPoint, Vector.times(4, Vector.rotate(Math.PI / 2, direction)));
+        let backRight = Vector.plus(backwardPoint, Vector.times(4, Vector.rotate(-Math.PI / 2, direction)));
+
+        ctx.beginPath();
+        ctx.moveTo(forwardPoint.x, forwardPoint.y);
         ctx.lineTo(backLeft.x, backLeft.y);
         ctx.lineTo(backRight.x, backRight.y);
 

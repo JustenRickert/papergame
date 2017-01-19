@@ -23,17 +23,17 @@ testGameLoop();
 function testGameLoop() {
     if (game.running) {
         game.graph.behaviorRun(game);
-        // game.graph.bulletRun(game);
+        game.graph.bulletRun(game);
+        game.graph.isThenBulletClipping();
         game.graph.isThenClipping();
+        game.graph.outOfBoundsBulletsRun();
 
         clearScreen();
         game.graph.drawVertexes();
+        game.graph.drawBullets();
         game.graph.sumResetDelta();
         game.graph.updateCollisionBucket();
 
-        game.graph.drawTest(15, new Vector(230, 230), new Vector(3, 1));
-        game.graph.drawTest(15, new Vector(253, 230), new Vector(1, 2));
-        game.graph.drawTest(15, new Vector(223, 100), new Vector(0.5, 0.5));
         game.increment();
     } else {
     }

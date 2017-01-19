@@ -12,7 +12,7 @@ class RedCircle extends Circle {
         super(id, 20, new Vector(200, 300))
         this.behaviors = behaviors;
         this.id = id;
-        this.color = "Red";
+        this.color = "red";
         this.timeAlive = 0
 
         this.speed = 1.0,

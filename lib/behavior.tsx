@@ -148,9 +148,9 @@ class circleBehavior implements Behavior {
     }
 }
 
-class simpleAimShootBehavior implements Behavior {
-    public bShoot: BasicShoot = new BasicAttack(1);
-    public attackRange: number = 300;
+class SimpleAimShootBehavior implements Behavior {
+    public bShoot: BasicShoot = new BasicShoot(3);
+    public attackRange: number = 440;
     public targetV: Vertex;
 
     constructor() {
@@ -168,11 +168,16 @@ class simpleAimShootBehavior implements Behavior {
             this.shootBullet(v, game);
         }
     }
-    shootBullet = (v: Vertex, game: Game): void =>
+    shootBullet = (v: Vertex, game: Game): void => {
+        let dirTo = Vector.minus(this.targetV.circle.pos, v.circle.pos);
         Bullet.shoot(
             v.circle.pos,
-            Vector.minus(this.targetV.circle.pos, v.circle.pos),
-            game.graph)
+            Vector.times(1 / Vector.mag(dirTo), dirTo),
+            v.circle.color,
+            this.bShoot.damage,
+            game.graph);
+        this.bShoot.resetAttack();
+    }
 }
 
 class chargeOpponentBehavior implements Behavior {

@@ -18,8 +18,16 @@ class Game {
         this.frame = 0;
     }
 
-    public increment = (): void => { this.frame++ }
-    public run = (): void => {
+    increment = (): void => { this.frame++ }
+
+    run = (): void => {
         this.increment();
     }
+
+    // randomShoot = (): void => {
+    //     let pos = new Vector(320, 320);
+    //     let vel = Vector.random();
+    //     let color = "red";
+    //     Bullet.shoot(pos, vel, color, this.graph);
+    // }
 }

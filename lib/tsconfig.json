@@ -1,6 +1,7 @@
 {
     "files": [
         "menu.tsx",
+        "collisionbucket.tsx",
         "bullet.tsx",
         "graph.tsx",
         "vector.tsx",
@@ -13,7 +14,6 @@
         "blue.tsx",
         "player.tsx",
         "behavior.tsx",
-        "collisionbucket.tsx",
         "graph.tsx",
         "main.tsx"
     ]

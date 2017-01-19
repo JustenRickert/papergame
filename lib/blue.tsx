@@ -10,7 +10,7 @@ class BlueCircle extends Circle {
         super(id, 20, new Vector(200, 300))
         this.behaviors = behaviors;
         this.id = id;
-        this.color = "Blue";
+        this.color = "blue";
         this.timeAlive = 0
 
         this.life.maxHealth = 10;

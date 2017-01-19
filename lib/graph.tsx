@@ -15,7 +15,7 @@ interface Vertex {
 
 class Graph {
     vertexes: Vertex[];
-    bullets: Bullet[];
+    bullets: Bullet[] = [];
     vertexDeltas: Vector[] = [];
     edges: Edge[];
     player: Player;
@@ -35,6 +35,12 @@ class Graph {
         this.collisionBucket = new CollisionBucket(this);
     }
 
+    removeBullet = (b: Bullet): void => {
+        this.bullets.splice(this.bullets.indexOf(b), 1);
+    }
+
+    outOfBoundsBulletsRun = (): void => this.bullets.forEach((b) => b.isThenOutOfBounds(this));
+
     // Sums the delta with current position, then resets the delta.
     sumResetDelta = (): void => {
         // let i = 0; i < this.vertexes.length; i++
@@ -48,8 +54,7 @@ class Graph {
         for (let i in this.edges) {
             this.edges[i].dist =
                 Vector.distance(this.edges[i].parent.circle.pos, this.edges[i].child.circle.pos)
-                - this.edges[i].parent.circle.radius
-                - this.edges[i].child.circle.radius;
+                - this.edges[i].parent.circle.radius - this.edges[i].child.circle.radius;
         }
         this.edges = Graph.sortedEdges(this.edges);
         // place new edges inside of vertexes
@@ -134,6 +139,9 @@ class Graph {
         }
     }
 
+    isThenBulletClipping = (): void =>
+        this.bullets.forEach((b) => b.isThenClipping(this, this.collisionBucket));
+
     closestVertex = (v: Vertex): Vertex => v.edges[0].child;
 
     closestDirtyVertex = (v: Vertex): Vertex => v.edges.filter(Graph.isDirty)[0].child;
@@ -168,7 +176,7 @@ class Graph {
     clippingPush = (edge: Edge): void => {
         let dirTo = Vector.minus(edge.parent.circle.pos, edge.child.circle.pos);
         // edge.distance should be negative if clipping
-        let multiplier = (1 - edge.dist) / 25
+        let multiplier = (1 - edge.dist) / 16;
         this.addDelta(
             this.indexOf(edge.parent),
             Vector.times(multiplier * edge.parent.circle.clippingForce, dirTo));
@@ -194,6 +202,8 @@ class Graph {
     }
 
     drawVertexes = (): void => this.vertexes.forEach((v): void => this.drawCircle(v.circle));
+
+    drawBullets = (): void => this.bullets.forEach((b): void => b.draw());
 
     drawCircle = (circle: Circle): void => {
         if (!circle.alive)

@@ -15,7 +15,13 @@ class Player {
             this.blueCircles[i].position(600, 600);
         }
         this.circles = this.allCircles();
-        this.circles.map((circle) => circle.behaviors.push(new AttackBehavior()));
+        for (let i = 0; i < 15; i++)
+            this.redCircles[i].behaviors.push(new SimpleAimShootBehavior());
+        for (let i = 15; i < 30; i++)
+            this.redCircles[i].behaviors.push(new AttackBehavior());
+
+        for (let i = 0; i < 25; i++)
+            this.blueCircles[i].behaviors.push(new AttackBehavior());
     }
 
     allCircles = () => this.redCircles.concat(this.blueCircles);
