@@ -26,34 +26,34 @@ interface Behavior {
  * (attackC: Circle) at the defending circle (defendC/targetC: Circle). */
 class AttackBehavior implements Behavior {
     public bAttack: BasicAttack = new BasicAttack(1);
-    public attackRange: number = 3;
+    public attackRange: number = 50;
     public lungeVelocity: number = 3;
     public targetV: Vertex;
 
     public condition = (v: Vertex, game: Game): boolean => {
         if (this.bAttack.canAttack(game)) {
             this.targetV = game.graph.closestDirtyVertex(v);
-            if (!this.targetV)
-                return false
+            // if (!this.targetV)
+            //     return false
             return true;
         }
         return false;
     }
     public consequence = (attackV: Vertex, game: Game): any => {
         // Is the attacking circle close to the defending circle?
-        if (Vector.distance(attackV.circle.pos, this.targetV.circle.pos) >
-            this.attackRange * attackV.circle.radius)
-            attackV.circle.moveToPosition(this.targetV.circle.pos, game.graph);
+        attackV.circle.moveToPosition(this.targetV.circle.pos, game.graph);
         // Is the angle right to lunge at the enemy?
-        else if (Math.abs(attackV.circle.angleToCircle(this.targetV.circle)) < .1) {
+        if (Math.abs(attackV.circle.angleToCircle(this.targetV.circle)) < .1 &&
+            Vector.distance(attackV.circle.pos, this.targetV.circle.pos) < this.attackRange) {
             this.lungeAndAttack(attackV.circle, game);
         }
-        // Turn to the defending circle so the previous predicate is true.
+        // Turn to the defending circle so the previous if statement can be
+        // true.
         else
             attackV.circle.turnToPosition(this.targetV.circle.pos);
     }
     public lungeAndAttack = (attackC: Circle, game: Game): void => {
-        attackC.moveForwardByScalarVel(this.lungeVelocity);
+        attackC.moveForwardByScalarVel(this.lungeVelocity, game.graph);
         if (Circle.isClipping(attackC, this.targetV.circle)) {
             this.bAttack.attack(this.targetV.circle, game);
         }
@@ -65,16 +65,16 @@ class AttackBehavior implements Behavior {
  * moment (the "vector mean" if the mean is the average of a set of values) of
  * the closest five, friendly circles. */
 class WanderCloselyBehavior implements Behavior {
-    private shouldRunToGroup: boolean;
     static shouldWanderCount = 60
+    private shouldRunToGroup: boolean;
     private shouldWander: number = 60;
     private positionToMove: Vector;
     private wanderPosition: Vector;
     private wanderRadius: number = 7;
 
     constructor() {
-        this.positionToMove = Vector.times(640, Vector.random());
-        this.wanderPosition = Vector.times(640, Vector.random());
+        this.positionToMove = Vector.times(ctx.height, Vector.random());
+        this.wanderPosition = Vector.times(ctx.height, Vector.random());
     }
 
     private outOfBoundCheck(v: Vertex) {
@@ -97,14 +97,14 @@ class WanderCloselyBehavior implements Behavior {
         } else {
             this.shouldRunToGroup = false;
             if (this.shouldWander < 0) {
-                this.willWander(v.circle);
+                this.willWander(v.circle, game.frame);
             }
         }
         return true;
     }
     // The circle is either far enough away to want to run towards the group, or
     // the circle wanders around aimlessly.
-    public consequence(v: Vertex, game: Game): any {
+    consequence = (v: Vertex, game: Game): any => {
         if (this.outOfBoundCheck(v))
             v.circle.moveToPosition(new Vector(320, 320), game.graph)
         if (this.shouldRunToGroup)
@@ -120,8 +120,8 @@ class WanderCloselyBehavior implements Behavior {
     private wander(v: Vertex, graph: Graph): void {
         v.circle.moveToPosition(this.wanderPosition, graph);
     }
-    private willWander(c: Circle): void {
-        if (Math.random() < 0.001) {
+    private willWander(c: Circle, frame: number): void {
+        if (frame % 300 === 0 && Math.random() < 0.30) {
             this.shouldWander = WanderCloselyBehavior.shouldWanderCount;
             this.wanderPosition =
                 Vector.plus(this.positionToMove,
@@ -155,6 +155,7 @@ class SimpleAimShootBehavior implements Behavior {
 
     constructor() {
     }
+
     condition = (v: Vertex, game: Game): boolean => {
         if (this.bShoot.canAttack(game)) {
             this.targetV = game.graph.closestDirtyVertex(v);
@@ -162,12 +163,14 @@ class SimpleAimShootBehavior implements Behavior {
         }
         return false
     }
+
     consequence = (v: Vertex, game: Game): any => {
         v.circle.turnToPosition(this.targetV.circle.pos);
-        if (Math.abs(v.circle.angleToCircle(this.targetV.circle)) < .05) {
+        if (Math.abs(v.circle.angleToCircle(this.targetV.circle)) < .1) {
             this.shootBullet(v, game);
         }
     }
+
     shootBullet = (v: Vertex, game: Game): void => {
         let dirTo = Vector.minus(this.targetV.circle.pos, v.circle.pos);
         Bullet.shoot(

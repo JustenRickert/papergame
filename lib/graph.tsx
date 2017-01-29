@@ -43,7 +43,6 @@ class Graph {
 
     // Sums the delta with current position, then resets the delta.
     sumResetDelta = (): void => {
-        // let i = 0; i < this.vertexes.length; i++
         let nilVector = new Vector(0, 0);
         for (let i in this.vertexes) {
             this.vertexes[i].circle.pos = Vector.plus(
@@ -169,7 +168,8 @@ class Graph {
                 Vector.plus(accumVector, v.circle.pos)), new Vector(0, 0)));
     }
 
-    behaviorRun = (game: Game): void => this.vertexes.forEach((v) => v.circle.behave(v, game));
+    behaviorRun = (game: Game): void =>
+        this.vertexes.forEach((v) => v.circle.behave(v, game));
 
     bulletRun = (game: Game): void => this.bullets.forEach((b) => b.behave(game));
 

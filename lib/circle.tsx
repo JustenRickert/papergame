@@ -27,6 +27,10 @@ class Circle {
         // this.direction = 4 * Math.PI * Math.random() - 2 * Math.PI;
     }
 
+    addBehavior = (behavior: Behavior): void => {
+        this.behaviors.push(behavior);
+    }
+
     public position = (new_x: number, new_y: number): void => {
         this.pos = new Vector(new_x, new_y)
     }
@@ -37,10 +41,12 @@ class Circle {
             this.pos.y + this.speed * this.vel.y);
     }
 
-    public moveForwardByScalarVel = (scalar: number): void => {
-        this.pos = new Vector(
-            this.pos.x + this.speed * scalar * this.vel.x,
-            this.pos.y + this.speed * scalar * this.vel.y);
+    public moveForwardByScalarVel = (scalar: number, graph: Graph): void => {
+        graph.addDelta(
+            graph.indexOfCircle(this),
+            new Vector(
+                this.speed * scalar * this.vel.x,
+                this.speed * scalar * this.vel.y));
     }
 
     public moveForwardByVec = (vec: Vector): void => {
@@ -60,7 +66,8 @@ class Circle {
 
     public turnToPosition = (pos: Vector): void => {
         if (Math.abs(Vector.angleBetween(this.vel, Vector.minus(pos, this.pos))) > 0.01) {
-            this.turn(this.turnRate * Vector.directionTo(this.vel, Vector.minus(pos, this.pos)));
+            this.turn(this.turnRate * Vector.angularDirectionTo(this.vel,
+                Vector.minus(pos, this.pos)));
         }
     }
 
@@ -78,12 +85,13 @@ class Circle {
 
     public moveToPosition = (pos: Vector, graph: Graph): void => {
         this.turnToPosition(pos);
-        if (this.angleToPosition(pos)) {
-            if (Vector.distance(this.pos, pos) > .1 * this.radius) {
-                graph.addDelta(
-                    graph.indexOfCircle(this),
-                    new Vector(this.speed * this.vel.x, this.speed * this.vel.y));
-            }
+        // Can't start moving forward when not facing in the right direction
+        if (this.angleToPosition(pos) < 0.1) {
+            graph.addDelta(
+                graph.indexOfCircle(this),
+                new Vector(
+                    this.speed * this.vel.x,
+                    this.speed * this.vel.y));
         }
     }
 
@@ -94,6 +102,7 @@ class Circle {
     public angleToCircle = (otherC: Circle): number => {
         return Vector.angleBetween(this.vel, Vector.minus(otherC.pos, this.pos))
     }
+
     public angleToPosition = (v: Vector): number => {
         return Vector.angleBetween(this.vel, Vector.minus(v, this.pos))
     }
@@ -131,16 +140,15 @@ class Circle {
         Vector.distance(c1.pos, c2.pos) < c1.radius + c2.radius;
 
     behave = (v: Vertex, game: Game): void => {
-        for (let bhvr of this.behaviors) {
-            if (bhvr.condition(v, game)) {
-                bhvr.consequence(v, game);
+        for (let b of this.behaviors) {
+            if (b.condition(v, game)) {
+                b.consequence(v, game);
                 return
             }
         }
-        if (this.wander.condition(v, game)) {
-            this.wander.consequence(v, game);
-            return
-        }
+        // default behavior
+        this.wander.condition(v, game)
+        this.wander.consequence(v, game);
     }
 }
 
