@@ -3,17 +3,19 @@
 class Vector {
     constructor(public x: number, public y: number) { }
 
-    static times = (k: number, v: Vector) => new Vector(k * v.x, k * v.y);
+    static times = (k: number, v: Vector): Vector => new Vector(k * v.x, k * v.y);
 
-    static minus = (v1: Vector, v2: Vector) =>
+    static minus = (v1: Vector, v2: Vector): Vector =>
         new Vector(v1.x - v2.x, v1.y - v2.y);
 
-    static plus = (v1: Vector, v2: Vector) =>
+    static plus = (v1: Vector, v2: Vector): Vector =>
         new Vector(v1.x + v2.x, v1.y + v2.y);
 
-    static dot = (v1: Vector, v2: Vector) => v1.x * v2.x + v1.y * v2.y;
+    static dot = (v1: Vector, v2: Vector): number => v1.x * v2.x + v1.y * v2.y;
 
     static mag = (v: Vector): number => Math.sqrt(v.x * v.x + v.y * v.y);
+
+    static unit = (v: Vector): Vector => Vector.times(1/Vector.mag(v), v);
 
     static distance = (v1: Vector, v2: Vector): number =>
         Vector.mag(Vector.minus(v2, v1));
@@ -37,7 +39,8 @@ class Vector {
     static random = (): Vector =>
         new Vector(2 * Math.random() - 1, 2 * Math.random() - 1);
 
-    static equalPosition = (p1: Vector, p2: Vector): boolean => p1.x === p2.x && p1.y === p2.y
+    static equalPosition = (p1: Vector, p2: Vector): boolean =>
+        p1.x === p2.x && p1.y === p2.y
 
     // https://en.wikipedia.org/wiki/Rotation_matrix/
     static rotate = (alpha: number, vector: Vector): Vector => {

@@ -18,27 +18,29 @@ class Life {
 }
 
 class BasicAttack {
-    public damage: number;
-    public lastAttack: number;
-    public attackRate: number = 360;
+    damage: number;
+    lastAttack: number;
+    attackRate: number = 360;
     constructor(d: number) {
         this.damage = d;
-        this.lastAttack = 0;
+        this.lastAttack = -Infinity;
     }
-    public canAttack = (game: Game): boolean =>
+    canAttack = (game: Game): boolean =>
         game.frame - this.lastAttack > this.attackRate;
-    public attack = (c: Circle, game: Game): void => {
+
+    attack = (c: Circle, game: Game): void => {
         c.life.damage(this.damage);
         this.lastAttack = game.frame;
     }
 }
 
 class BasicShoot {
-    public damage: number;
-    public lastAttack: number = 0;
-    public attackRate: number = 500;
+    damage: number;
+    lastAttack: number = 0;
+    attackRate: number = 500;
 
     constructor(damage: number) {
+        this.lastAttack = -Infinity;
         this.damage = damage;
     }
 

@@ -3,7 +3,7 @@
 // Circles are cool!
 class Circle {
     public clippingForce: number = 0.075;
-    public life: Life = new Life(-1);
+    public life: Life = new Life(25);
     public alive: boolean;
     public timeAlive: number;
     public behaviors: Behavior[]; // add behaviors to this array
@@ -15,6 +15,7 @@ class Circle {
         public pos: Vector,
         public dPos: Vector = new Vector(0, 0),
         public vel: Vector = Vector.random(),
+        public teamColor: string = 'Black',
         public color: string = 'Black',
         public bandColor: string = 'Black',
         public direction: number = 4 * Math.PI * Math.random() - 2 * Math.PI,
@@ -22,17 +23,14 @@ class Circle {
         public turnRate: number = 0.07
     ) {
         this.alive = true;
-        // if (!this.direction)
-        // this.vel = Vector.random();
-        // this.direction = 4 * Math.PI * Math.random() - 2 * Math.PI;
     }
 
     addBehavior = (behavior: Behavior): void => {
         this.behaviors.push(behavior);
     }
 
-    public position = (new_x: number, new_y: number): void => {
-        this.pos = new Vector(new_x, new_y)
+    public position = (newX: number, newY: number): void => {
+        this.pos = new Vector(newX, newY);
     }
 
     public moveForwardByVel = (): void => {
@@ -139,7 +137,16 @@ class Circle {
     static isClipping = (c1: Circle, c2: Circle): boolean =>
         Vector.distance(c1.pos, c2.pos) < c1.radius + c2.radius;
 
+    reinitializeBehaviors = () => {
+        for (let b of this.behaviors) {
+            b.reinitialize();
+        }
+    }
+
     behave = (v: Vertex, game: Game): void => {
+        if (v.circle.life.health === 0) {
+            return
+        }
         for (let b of this.behaviors) {
             if (b.condition(v, game)) {
                 b.consequence(v, game);

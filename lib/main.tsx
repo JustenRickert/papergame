@@ -16,11 +16,52 @@ function clearScreen() {
     // ctx.width, ctx.height);
 }
 
-var player = new Player();
-var game = new Game(player)
+var STARTING_UNITS_PLAYER: UnitCard[] = (() => {
+    let circles = [];
+    for (let i of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+        circles.push(new RedCircle(i));
+    circles.forEach((c) => c.pos = new Vector(0, 0));
+    return cardify(circles);
+})();
+
+var STARTING_UNITS_ENEMY: UnitCard[] = (() => {
+    let circles = [];
+    for (let i of [0, 1, 2, 3, 4, 5, 6])
+        circles.push(new BlueCircle(i + 12));
+    circles.forEach((c) => c.pos = new Vector(canvas.width, canvas.height));
+    return cardify(circles);
+})();
+
+function cardifyOne(circle: Circle): UnitCard {
+    let uc = new UnitCard(circle);
+    uc.behavior = [new SimpleAimShootBehavior(), new AttackBehavior()]
+    return uc;
+}
+
+function cardify(circle: Circle[]): UnitCard[] {
+    let l: UnitCard[] = [];
+    circle.forEach((c) => l.push(new UnitCard(c)));
+    l.forEach((card) => card.behavior = [new SimpleAimShootBehavior(), new AttackBehavior()]);
+    l.forEach((card) => l[l.indexOf(card)].circle.behaviors =
+        [new SimpleAimShootBehavior(), new AttackBehavior()]);
+    return l;
+}
+
+var player = new Player(STARTING_UNITS_PLAYER);
+var playerAdds: UnitCard[] = [];
+var enemy = new Player(STARTING_UNITS_ENEMY);
+var enemyAdds: UnitCard[] = [];
+var game = new Game(player, enemy);
 testGameLoop();
 
 function testGameLoop() {
+    if (game.winCondition()) {
+        console.log('game was won')
+        game.reinitialize('win');
+    } else if (game.loseCondition()) {
+        console.log('game was lost')
+        game.reinitialize('loss');
+    }
     if (game.running) {
         game.graph.behaviorRun(game);
         game.graph.bulletRun(game);
@@ -33,6 +74,8 @@ function testGameLoop() {
         game.graph.drawBullets();
         game.graph.sumResetDelta();
         game.graph.updateCollisionBucket();
+
+        game.graph.checkDead();
 
         game.increment();
     } else {

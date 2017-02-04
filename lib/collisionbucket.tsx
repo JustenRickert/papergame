@@ -1,4 +1,4 @@
-// I DO NEED THIS I think.
+//-*-mode:typescript-*-
 class CollisionBucket {
 
     lines: { x: number[], y: number[] };
@@ -20,7 +20,8 @@ class CollisionBucket {
         }
 
         for (let v of graph.vertexes) {
-            let index = CollisionBucket.gridIndexToCollisionBucketIndex(this.gridIndexOf(v.circle.pos));
+            let index = CollisionBucket
+                .gridIndexToCollisionBucketIndex(this.gridIndexOf(v.circle.pos));
             !this.bucket[index]
                 ? this.bucket[index] = [v]
                 : this.bucket[index].push(v);
@@ -73,6 +74,7 @@ class CollisionBucket {
         return this.bucket[CollisionBucket.gridIndexToCollisionBucketIndex(index)] || [];
     }
 
+    // TODO: There must be an elegant way to do this...
     private indexesAroundRegion = (i: { x: string, y: string }): { x: string, y: string }[] => {
         let vOffset = this.bucketCount;
         return [

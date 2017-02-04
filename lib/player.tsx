@@ -1,38 +1,28 @@
 /*-*-mode:typescript-*-*/
 class Player {
+    units: UnitCard[];
+    circle: Circle[];
 
-    redCircles: Circle[] = [];
-    blueCircles: Circle[] = [];
-    circles: Circle[];
-
-    constructor() {
-        for (let i = 0; i < 30; i++) {
-            this.redCircles.push(new RedCircle(i));
-            this.redCircles[i].position(40, 40);
-        }
-        for (let i = 0; i < 25; i++) {
-            this.blueCircles.push(new BlueCircle(10 + i));
-            this.blueCircles[i].position(600, 600);
-        }
-        this.circles = this.allCircles();
-        for (let i = 0; i < 15; i++)
-            this.redCircles[i].behaviors.push(new SimpleAimShootBehavior());
-        for (let i = 15; i < 30; i++)
-            this.redCircles[i].behaviors.push(new AttackBehavior());
-
-        for (let i = 0; i < 25; i++)
-            this.blueCircles[i].behaviors.push(new AttackBehavior());
+    constructor(units: UnitCard[]) {
+        this.units = units;
+        this.circle = this.circles();
     }
 
-    allCircles = () => this.redCircles.concat(this.blueCircles);
+    circles = (): Circle[] => {
+        let circles: Circle[] = [];
+        this.units.forEach((u) => circles.push(u.circle));
+        return circles;
+    }
 }
 
 class UnitCard {
     circle: Circle;
+    behavior: Behavior[];
     experience: number;
 
-    constructor(circle: Circle) {
+    constructor(circle: Circle, ...behavior: Behavior[]) {
         this.circle = circle;
+        this.behavior = behavior;
         this.experience = 0;
     }
 }

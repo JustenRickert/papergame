@@ -18,16 +18,21 @@ class Graph {
     bullets: Bullet[] = [];
     vertexDeltas: Vector[] = [];
     edges: Edge[];
+    deadEdges: Edge[];
     player: Player;
+    enemy: Player;
+    dead: Vertex[] = [];
 
     size: { height: number, width: number };
     collisionBucket: CollisionBucket;
 
-    constructor(player: Player) {
+    constructor(player: Player, enemy: Player) {
         let nilVector = new Vector(0, 0);
+        this.deadEdges = [];
         this.player = player;
-        this.edges = Graph.sortedEdges(Graph.getEdges(player.circles));
-        this.vertexes = this.getVertexes(player.circles);
+        this.enemy = enemy;
+        this.edges = Graph.sortedEdges(Graph.getEdges(player.circles().concat(enemy.circles())));
+        this.vertexes = this.getVertexes(player.circles().concat(enemy.circles()));
         for (let i in this.vertexes) {
             this.vertexDeltas[i] = nilVector;
         }
@@ -35,11 +40,47 @@ class Graph {
         this.collisionBucket = new CollisionBucket(this);
     }
 
+    reinitializeBehaviors = (): void => {
+        for (let v of this.vertexes) {
+            v.circle.reinitializeBehaviors();
+        }
+    }
+
+    giveVertexToDead = (vertex: Vertex): void => {
+        this.dead.push(vertex);
+    }
+
+    checkDead = (): void => {
+        for (let v of this.vertexes) {
+            if (v.circle.life.health === 0) {
+                v.circle.teamColor = 'gray'; // colors the circle gray for effect
+                v.circle.color = 'gray'; // colors the circle gray for effect
+                v.circle.alive = false;
+                this.giveVertexToDead(v);
+            }
+        }
+    }
+
+    doesNotEdgeHaveVertex = (vertex: Vertex, edge: Edge) =>
+        !this.doesEdgeHaveVertex(edge, vertex);
+
+    doesEdgeHaveVertex = (edge: Edge, vertex: Vertex): boolean => {
+        return edge.child.circle.id === vertex.circle.id
+            || edge.parent.circle.id === vertex.circle.id;
+    }
+
+    clearBullets = (): void => {
+        for (let b of this.bullets) {
+            this.removeBullet(b);
+        }
+    }
+
     removeBullet = (b: Bullet): void => {
         this.bullets.splice(this.bullets.indexOf(b), 1);
     }
 
-    outOfBoundsBulletsRun = (): void => this.bullets.forEach((b) => b.isThenOutOfBounds(this));
+    outOfBoundsBulletsRun = (): void => this.bullets.forEach((b) =>
+        b.isThenOutOfBounds(this));
 
     // Sums the delta with current position, then resets the delta.
     sumResetDelta = (): void => {
@@ -56,22 +97,27 @@ class Graph {
                 - this.edges[i].parent.circle.radius - this.edges[i].child.circle.radius;
         }
         this.edges = Graph.sortedEdges(this.edges);
+        // this.deadEdges = Graph.sortedEdges(this.deadEdges);
         // place new edges inside of vertexes
         for (let i in this.vertexes) {
-            this.vertexes[i].edges = this.edgesWithCircle(this.vertexes[i].circle);
+            this.vertexes[i].edges = this.edgesWithCircleAsParent(this.vertexes[i].circle);
         }
     }
 
     updateCollisionBucket = (): void => this.collisionBucket.recalculateBucket(this);
 
-    isParentOfEdge = (circle: Circle, edge: Edge): boolean =>
+    static isParentOrChildOfEdge = (circle: Circle, edge: Edge): boolean => {
+        return circle.id === edge.parent.circle.id || circle.id === edge.child.circle.id;
+    }
+
+    static isParentOfEdge = (circle: Circle, edge: Edge): boolean =>
         circle === edge.parent.circle;
 
     getVertexes = (circles: Circle[]): Vertex[] => {
         let vertexes: Vertex[] = []
         for (let i in circles) {
             vertexes.push({
-                circle: circles[i], edges: this.edgesWithCircle(circles[i])
+                circle: circles[i], edges: this.edgesWithCircleAsParent(circles[i])
             })
         }
         return vertexes;
@@ -102,7 +148,10 @@ class Graph {
     }
 
     edgesWithCircle = (c: Circle): Edge[] =>
-        this.edges.filter(this.isParentOfEdge.bind(this, c));
+        this.edges.filter(Graph.isParentOrChildOfEdge.bind(this, c));
+
+    edgesWithCircleAsParent = (c: Circle): Edge[] =>
+        this.edges.filter(Graph.isParentOfEdge.bind(this, c));
 
     static sortedEdges = (edges: Edge[]): Edge[] => edges.sort(Graph.compareDist);
 
@@ -118,23 +167,27 @@ class Graph {
         };
     }
 
+    smallestDirtyEdgeFrom = (vertex: Vertex): Edge => {
+        for (let e of this.edges.filter(Graph.isDirty)) {
+            if (e.parent === vertex) return e;
+        }
+    }
+
     static compareDist = (e1: Edge, e2: Edge): number => e1.dist - e2.dist;
 
     static isDirty = (e: Edge): boolean =>
-        e.parent.circle.color !== e.child.circle.color;
+        e.parent.circle.teamColor !== e.child.circle.teamColor;
 
     static isClean = (e: Edge): boolean =>
-        e.parent.circle.color === e.child.circle.color;
+        e.parent.circle.teamColor === e.child.circle.teamColor;
 
     // collision
     isThenClipping = (): void => {
         // So, this.edges is ordered, meaning when we stop finding colliding
         // edges, there won't be anymore colliding edges.
         for (let e of this.edges) {
-            if (e.dist <= 0)
-                this.clippingPush(e);
-            else
-                break
+            if (e.dist <= 0) this.clippingPush(e);
+            else return
         }
     }
 
@@ -201,13 +254,13 @@ class Graph {
         return -1
     }
 
-    drawVertexes = (): void => this.vertexes.forEach((v): void => this.drawCircle(v.circle));
+    drawVertexes = (): void => {
+        this.vertexes.concat(this.dead).forEach((v): void => this.drawCircle(v.circle));
+    }
 
     drawBullets = (): void => this.bullets.forEach((b): void => b.draw());
 
     drawCircle = (circle: Circle): void => {
-        if (!circle.alive)
-            circle.color = 'gray'
         // Draw the Circle
         ctx.beginPath();
         ctx.arc(circle.pos.x, circle.pos.y, circle.radius, 0, 2 * Math.PI);

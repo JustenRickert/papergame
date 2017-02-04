@@ -2,7 +2,7 @@ class Bullet {
     pos: Vector;
     vel: Vector;
     color: string;
-    damage: number;
+    damage: number = 2;
 
     size: number = 2;
 
@@ -12,7 +12,7 @@ class Bullet {
         this.color = color;
     }
 
-    isDirty = (v: Vertex): boolean => this.color !== v.circle.color;
+    isDirty = (v: Vertex): boolean => this.color !== v.circle.teamColor;
 
     behave = (game: Game): void => {
         if (this.isThenClipping(game.graph, game.graph.collisionBucket)) return
