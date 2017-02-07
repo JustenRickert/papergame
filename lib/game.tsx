@@ -27,6 +27,7 @@ class Game {
             this.graph.enemy.circle.push(newCircle);
         } else if (winOrLoss === 'loss') {
             this.graph.enemy.units.pop();
+            this.graph.enemy.circle.pop();
         }
         this.frame = 0;
         this.graph.clearBullets();
