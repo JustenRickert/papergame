@@ -107,9 +107,11 @@ class Circle {
 
     public isDead = (): boolean => this.life.health === 0;
 
+    public isAlive = (): boolean => this.life.health !== 0 && this.life.health !== NaN;
+
     public static isDead = (c: Circle): boolean => c.life.health === 0;
 
-    public static isAlive = (c: Circle): boolean => c.life.health !== 0;
+    public static isAlive = (c: Circle): boolean => c.life.health !== 0 && c.life.health !== NaN;
 
     public markDead = (): void => {
         this.alive = false;

@@ -52,8 +52,7 @@ class Graph {
 
     checkDead = (): void => {
         for (let v of this.vertexes) {
-            if (v.circle.life.health === 0) {
-                v.circle.teamColor = 'gray'; // colors the circle gray for effect
+            if (v.circle.life.health === 0 && v.circle.color !== 'gray') {
                 v.circle.color = 'gray'; // colors the circle gray for effect
                 v.circle.alive = false;
                 this.giveVertexToDead(v);
@@ -146,6 +145,8 @@ class Graph {
         }
         return edges;
     }
+
+    static isEdgeChildAlive = (e: Edge): boolean => e.child.circle.isAlive();
 
     edgesWithCircle = (c: Circle): Edge[] =>
         this.edges.filter(Graph.isParentOrChildOfEdge.bind(this, c));

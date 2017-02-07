@@ -30,8 +30,8 @@ class Game {
         }
         this.frame = 0;
         this.graph.clearBullets();
-        this.graph.player.circle.forEach((c) => c.teamColor = "red");
-        this.graph.enemy.circle.forEach((c) => c.teamColor = "blue");
+        this.graph.player.circle.forEach((c) => c.color = "red");
+        this.graph.enemy.circle.forEach((c) => c.color = "blue");
         this.graph.player.circle.forEach((c) => c.life.health = c.life.maxHealth);
         this.graph.enemy.circle.forEach((c) => c.life.health = c.life.maxHealth);
         this.graph.player.circle.forEach((c) => c.pos = new Vector(0, 0));

@@ -44,7 +44,7 @@ class AttackBehavior implements Behavior {
     }
 
     consequence = (attackV: Vertex, game: Game): any => {
-        this.targetEdge = attackV.edges.filter(Graph.isDirty)[0];
+        this.targetEdge = attackV.edges.filter(Graph.isDirty).filter(Graph.isEdgeChildAlive)[0];
         if (this.targetEdge === undefined) {
             return
         }

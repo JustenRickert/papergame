@@ -22,7 +22,7 @@ class Bullet {
     isThenClipping = (graph: Graph, cb: CollisionBucket): boolean => {
         let vertexes = cb.vertexesAtIndex(cb.gridIndexOf(this.pos)).filter(this.isDirty);
         for (let v of vertexes) {
-            if (this.isClippingVertex(v)) {
+            if (this.isClippingVertex(v) && v.circle.isAlive()) {
                 this.clip(v, graph);
                 return true;
             }
@@ -62,6 +62,6 @@ class Bullet {
     static shoot = (
         position: Vector, direction: Vector, color: string, damage: number,
         graph: Graph): void => {
-            graph.bullets.push(new Bullet(position, direction, color, damage));
+        graph.bullets.push(new Bullet(position, direction, color, damage));
     }
 }
