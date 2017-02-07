@@ -170,8 +170,10 @@ class SimpleAimShootBehavior implements Behavior {
     reinitialize = (): void => { this.bShoot = new BasicShoot(3) };
 
     condition = (v: Vertex, game: Game): boolean => {
-        let edge = v.edges.filter(Graph.isDirty).filter((edge) =>
-            edge.child.circle.life.health !== 0)[0];
+        let edge = v.edges.filter(Graph.isDirty).filter(Graph.isEdgeChildAlive)[0];
+        if (edge === undefined) {
+            return false
+        }
         if (this.bShoot.canAttack(game) && edge.dist < this.attackRange) {
             this.targetV = edge.child;
             return true;
