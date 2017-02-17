@@ -10,7 +10,7 @@
   ],
   "devDependencies": {},
   "scripts": {
-    "build": "tsc -p lib/",
+    "build": "tsc --module commonjs -p lib/",
     "build:watch": "tsc -p lib/ -w",
     "build:e2e": "tsc -p e2e/",
     "serve": "lite-server -c=bs-config.json",

@@ -64,7 +64,7 @@ export class Circle {
     this.setVel(new Vector(Math.sin(this.direction), Math.cos(this.direction)));
   }
 
-  public turn = (delta): void => {
+  public turn = (delta: number): void => {
     /* a positive value indicates turning clockwise,  */
     this.direction = Math.abs(this.direction + delta) >= 2 * Math.PI ?
       (this.direction + delta) % Math.PI : this.direction + delta;

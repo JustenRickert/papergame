@@ -17,7 +17,7 @@ export class RedCircle extends Circle {
         this.behaviors = behaviors;
         this.id = id;
         this.teamColor = "red";
-        this.color = "red";
+        this.color = "gold";
         this.timeAlive = 0
 
         this.speed = 1.0,

@@ -60,7 +60,7 @@ export class Bullet {
     return Vector.distance(vertex.circle.pos, this.pos) < vertex.circle.radius;
   }
 
-  moveForward = (game): void => {
+  moveForward = (game: Game): void => {
     this.pos = Vector.plus(this.pos, this.vel);
   }
 
@@ -72,6 +72,6 @@ export class Bullet {
   static shoot = (
     position: Vector, direction: Vector, color: string, damage: number,
     graph: Graph): void => {
-      graph.bullets.push(new Bullet(position, direction, color, damage));
-    }
+    graph.bullets.push(new Bullet(position, direction, color, damage));
+  }
 }

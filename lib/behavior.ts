@@ -90,13 +90,13 @@ export class WanderCloselyBehavior implements Behavior {
     private wanderRadius: number = 7;
 
     constructor() {
-        this.positionToMove = Vector.times(ctx.height, Vector.random());
-        this.wanderPosition = Vector.times(ctx.height, Vector.random());
+        this.positionToMove = Vector.times(canvas.height, Vector.random());
+        this.wanderPosition = Vector.times(canvas.height, Vector.random());
     }
 
     reinitialize = (): void => {
-        this.positionToMove = Vector.times(ctx.height, Vector.random());
-        this.wanderPosition = Vector.times(ctx.height, Vector.random());
+        this.positionToMove = Vector.times(canvas.height, Vector.random());
+        this.wanderPosition = Vector.times(canvas.height, Vector.random());
     }
 
     private outOfBoundCheck(v: Vertex) {

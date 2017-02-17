@@ -1,4 +1,11 @@
 {
+  "compilerOptions": {
+    "module": "amd",
+    "sourceMap": true,
+    "removeComments": true,
+    "noImplicitAny": true,
+    "preserveConstEnums": true
+  },
   "files": [
     "collisionbucket.ts",
     "bullet.ts",
