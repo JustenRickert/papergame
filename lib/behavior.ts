@@ -1,4 +1,17 @@
-// -*- mode:typescript -*-
+//-*-mode:typescript-*-
+// Local Variables:
+// eval: (setq typescript-indent-level 2)
+// End:
+
+
+import { canvas, ctx } from './globaldeclarations'
+import { Circle } from './circle'
+import { Vector } from './vector'
+import { BasicShoot } from './life'
+import { Bullet } from './bullet'
+import { Game } from './game'
+import { Vertex, Edge, Graph } from './graph'
+import { BasicAttack } from './life'
 
 /* IDEA
      Okay. I was reading this thing
@@ -16,7 +29,7 @@
    the behavior predicates get run, then acting with the associated behavior
    consequence if any of the corresponding predicates return true. */
 
-interface Behavior {
+export interface Behavior {
     condition(v: Vertex, game: Game): boolean;
     consequence(v: Vertex, game: Game): any;
     reinitialize(): void;
@@ -25,7 +38,7 @@ interface Behavior {
 /* Attack the closest target to the circle given that the attackRate allows it.
  * The consequence is a sort of lunging attack that throws the attacking circle
  * (attackC: Circle) at the defending circle (defendC/targetC: Circle). */
-class AttackBehavior implements Behavior {
+export class AttackBehavior implements Behavior {
     bAttack: BasicAttack;
     attackRange: number = 50;
     lungeVelocity: number = 3;
@@ -68,7 +81,7 @@ class AttackBehavior implements Behavior {
  * to wander if the circle is within the wander Radius (wanderRadius) of the
  * moment (the "vector mean" if the mean is the average of a set of values) of
  * the closest five, friendly circles. */
-class WanderCloselyBehavior implements Behavior {
+export class WanderCloselyBehavior implements Behavior {
     static shouldWanderCount = 0;
     private shouldRunToGroup: boolean;
     private shouldWander: number = 30;
@@ -144,7 +157,7 @@ class WanderCloselyBehavior implements Behavior {
 /* TODO: Move around the nearest, friendly circle clockwise, switching
  * directions periodically. There could maybe be a damage consequence upon
  * clipping an enemy circle. */
-class circleBehavior implements Behavior {
+export class circleBehavior implements Behavior {
     constructor(v: Vertex, game: Game) { }
     // Do the circling behavior always
     condition(v: Vertex, game: Game): boolean {
@@ -158,7 +171,7 @@ class circleBehavior implements Behavior {
     }
 }
 
-class SimpleAimShootBehavior implements Behavior {
+export class SimpleAimShootBehavior implements Behavior {
     public bShoot: BasicShoot;
     public attackRange: number = 440;
     public targetV: Vertex;
@@ -184,7 +197,7 @@ class SimpleAimShootBehavior implements Behavior {
     consequence = (v: Vertex, game: Game): any => {
         if (Math.abs(v.circle.angleToCircle(this.targetV.circle)) < .1) {
             this.shootBullet(v, game);
-            this.bShoot.resetAttack();
+            this.bShoot.resetAttack(game);
         } else
             v.circle.turnToPosition(this.targetV.circle.pos);
     }
@@ -200,7 +213,7 @@ class SimpleAimShootBehavior implements Behavior {
     }
 }
 
-class chargeOpponentBehavior implements Behavior {
+export class chargeOpponentBehavior implements Behavior {
     constructor() { }
     // Do the circling behavior always
     condition(v: Vertex, game: Game): boolean {

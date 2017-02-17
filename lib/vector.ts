@@ -1,6 +1,8 @@
 // -*- mode:typescript -*-
 
-class Vector {
+import { canvas, ctx } from './globaldeclarations'
+
+export class Vector {
     constructor(public x: number, public y: number) { }
 
     static times = (k: number, v: Vector): Vector => new Vector(k * v.x, k * v.y);
@@ -15,7 +17,7 @@ class Vector {
 
     static mag = (v: Vector): number => Math.sqrt(v.x * v.x + v.y * v.y);
 
-    static unit = (v: Vector): Vector => Vector.times(1/Vector.mag(v), v);
+    static unit = (v: Vector): Vector => Vector.times(1 / Vector.mag(v), v);
 
     static distance = (v1: Vector, v2: Vector): number =>
         Vector.mag(Vector.minus(v2, v1));
@@ -56,7 +58,7 @@ class Vector {
     }
 }
 
-class Shape {
+export class Shape {
 
     // I know what these next two are, but don't use them
     static forwardPoint = (size: number, position: Vector, direction: Vector): Vector =>

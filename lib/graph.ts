@@ -1,19 +1,25 @@
 // -*-mode:typescript-*-
 
-/* Graph idea */
+import { canvas, ctx } from './globaldeclarations'
+import { Bullet } from './bullet'
+import { Circle } from './circle'
+import { CollisionBucket } from './collisionbucket'
+import { Game } from './game'
+import { Player } from './player'
+import { Vector, Shape } from './vector'
 
-interface Edge {
+export interface Edge {
     parent: Vertex,
     child: Vertex,
     dist: number
 }
 
-interface Vertex {
+export interface Vertex {
     circle: Circle,
     edges: Edge[]
 }
 
-class Graph {
+export class Graph {
     vertexes: Vertex[];
     bullets: Bullet[] = [];
     vertexDeltas: Vector[] = [];

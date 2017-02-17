@@ -1,20 +1,18 @@
 {
-    "files": [
-        "menu.tsx",
-        "collisionbucket.tsx",
-        "bullet.tsx",
-        "graph.tsx",
-        "vector.tsx",
-        "globaldeclarations.tsx",
-        "button.tsx",
-        "life.tsx",
-        "game.tsx",
-        "circle.tsx",
-        "red.tsx",
-        "blue.tsx",
-        "player.tsx",
-        "behavior.tsx",
-        "graph.tsx",
-        "main.tsx"
-    ]
+  "files": [
+    "collisionbucket.ts",
+    "bullet.ts",
+    "graph.ts",
+    "vector.ts",
+    "globaldeclarations.ts",
+    "life.ts",
+    "game.ts",
+    "circle.ts",
+    "red.ts",
+    "blue.ts",
+    "player.ts",
+    "behavior.ts",
+    "graph.ts",
+    "main.ts"
+  ]
 }

@@ -1,5 +1,9 @@
 //-*-mode:typescript-*-
-class CollisionBucket {
+
+import { Vector } from './vector'
+import { Vertex } from './graph'
+
+export class CollisionBucket {
 
     lines: { x: number[], y: number[] };
     bucket: Vertex[][];

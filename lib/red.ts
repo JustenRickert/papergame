@@ -1,12 +1,16 @@
 // -*- mode:typescript -*-
 
+import { Vector } from './vector'
+import { Circle } from './circle'
+import { Behavior } from './behavior'
+
 /* These are to be the place to have all of the red circles and things */
 
 /* RedCircle is going to be the base class for all friendly circles. The default
  * behavior of red circles will be to wander closely to the nearest five
  * friendly units. Otherwise, this circle is just fucking bag of meat awaiting
  * death. */
-class RedCircle extends Circle {
+export class RedCircle extends Circle {
 
     constructor(id: number, ...behaviors: Behavior[]) {
         super(id, 20, new Vector(200, 300))

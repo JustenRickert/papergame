@@ -1,6 +1,18 @@
-// -*-mode:typescript-*-
+//-*-mode:typescript-*-
+// Local Variables:
+// eval: (setq typescript-indent-level 2)
+// End:
 
-class Game {
+import { canvas, ctx } from './globaldeclarations'
+import { Vector } from './vector'
+import { cardifyOne } from './main' // Probably don't want this...
+import { Circle } from './circle'
+import { BlueCircle } from './blue'
+import { Graph } from './graph'
+import { Player } from './player'
+import { SimpleAimShootBehavior, AttackBehavior } from './behavior'
+
+export class Game {
     public running: boolean = true;
     public won: boolean = false;
     public lost: boolean = false;

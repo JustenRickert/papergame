@@ -1,10 +1,12 @@
 // -*- mode:typescript -*-
 
+import { Vector } from './vector'
+import { Circle } from './circle'
+import { Behavior } from './behavior'
 
-class BlueCircle extends Circle {
+export class BlueCircle extends Circle {
     public timeAlive: number;
     public behaviors: Behavior[];
-    public wander: Behavior = new WanderCloselyBehavior(); // Default behavior
 
     constructor(id: number, ...behaviors: Behavior[]) {
         super(id, 20, new Vector(200, 300))

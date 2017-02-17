@@ -1,5 +1,9 @@
 /*-*-mode:typescript-*-*/
-class Player {
+
+import { Circle } from './circle'
+import { Behavior } from './behavior'
+
+export class Player {
     units: UnitCard[];
     circle: Circle[];
 
@@ -15,7 +19,7 @@ class Player {
     }
 }
 
-class UnitCard {
+export class UnitCard {
     circle: Circle;
     behavior: Behavior[];
     experience: number;
