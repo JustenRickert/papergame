@@ -20,6 +20,7 @@
     "player.ts",
     "behavior.ts",
     "graph.ts",
+    "sound.ts",
     "main.ts"
   ]
 }

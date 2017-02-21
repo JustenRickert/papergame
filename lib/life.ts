@@ -5,6 +5,9 @@
 
 import { Circle } from './circle'
 import { Game } from './game'
+import { Sound } from './sound'
+
+const hitFartSound = Sound.playHitFartSound;
 
 export class Life {
   public health: number;
@@ -37,6 +40,7 @@ export class BasicAttack {
   attack = (c: Circle, game: Game): void => {
     c.life.damage(this.damage);
     this.lastAttack = game.frame;
+    hitFartSound();
   }
 }
 

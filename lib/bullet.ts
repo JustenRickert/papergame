@@ -7,6 +7,10 @@ import { Vector, Shape } from './vector'
 import { CollisionBucket } from './collisionbucket'
 import { Vertex, Graph } from './graph'
 import { Game } from './game'
+import { Sound } from './sound'
+
+const shortHighBeep = Sound.playShortHighBeep;
+const hitBulletSound = Sound.playHitBulletSound;
 
 export class Bullet {
   pos: Vector;
@@ -54,6 +58,7 @@ export class Bullet {
   clip = (v: Vertex, graph: Graph) => {
     v.circle.life.damage(this.damage)
     graph.removeBullet(this);
+    hitBulletSound();
   }
 
   isClippingVertex = (vertex: Vertex): boolean => {
@@ -72,6 +77,7 @@ export class Bullet {
   static shoot = (
     position: Vector, direction: Vector, color: string, damage: number,
     graph: Graph): void => {
-    graph.bullets.push(new Bullet(position, direction, color, damage));
-  }
+      graph.bullets.push(new Bullet(position, direction, color, damage));
+      shortHighBeep();
+    }
 }

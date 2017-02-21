@@ -5,14 +5,13 @@
 
 import { Vector } from './vector'
 
-export const canvas: HTMLCanvasElement
+export const GAME_CANVAS: HTMLCanvasElement
   = <HTMLCanvasElement>document.getElementById("gameCanvas");
-export const ctx: CanvasRenderingContext2D = canvas.getContext("2d");
+export const GAME_CTX: CanvasRenderingContext2D = GAME_CANVAS.getContext("2d");
 
 export var LASTCLICK = Vector.random();
-// How can I write this one with the fat arrow?
-canvas.onclick = function updateLastClick(event: MouseEvent) {
-  var mPos = getMousePos(canvas, event)
+GAME_CANVAS.onclick = function updateLastClick(event: MouseEvent) {
+  var mPos = getMousePos(GAME_CANVAS, event)
   LASTCLICK = new Vector(mPos.x, mPos.y);
 };
 

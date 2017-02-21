@@ -3,7 +3,7 @@
 // eval: (setq typescript-indent-level 2)
 // End:
 
-import { canvas, ctx } from './globaldeclarations'
+import { GAME_CANVAS, GAME_CTX } from './globaldeclarations'
 import { Bullet } from './bullet'
 import { Vector } from './vector'
 import { Circle } from './circle'
@@ -26,23 +26,27 @@ import { AttackBehavior, SimpleAimShootBehavior } from './behavior'
 
 // clears the screen, obvii
 function clearScreen() {
-  ctx.clearRect(0, 0, 640, 640);
+  GAME_CTX.clearRect(0, 0, 640, 640);
   // ctx.width, ctx.height);
 }
 
-var STARTING_UNITS_PLAYER: UnitCard[] = (() => {
+const STARTING_UNITS_PLAYER: UnitCard[] = (() => {
   let circles = [];
-  for (let i of [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]) // RedCircle needs a number id, lol
+  for (let i of [0, 1, 2, 3, 4, 5,
+    6, 7, 8, 9, 10, 11,
+    12, 13, 14, 15, 16,
+    17, 18, 19, 20, 21,
+    22, 23, 25, 26, 27]) // RedCircle needs a number id, lol
     circles.push(new RedCircle(i));
   circles.forEach((c) => c.pos = new Vector(0, 0));
   return cardify(circles);
 })();
 
-var STARTING_UNITS_ENEMY: UnitCard[] = (() => {
+const STARTING_UNITS_ENEMY: UnitCard[] = (() => {
   let circles = [];
   for (let i of [0, 1, 2, 3, 4, 5, 6])
     circles.push(new BlueCircle(i + 12));
-  circles.forEach((c) => c.pos = new Vector(canvas.width, canvas.height));
+  circles.forEach((c) => c.pos = new Vector(GAME_CANVAS.width, GAME_CANVAS.height));
   return cardify(circles);
 })();
 
@@ -57,42 +61,42 @@ export function cardify(circle: Circle[]): UnitCard[] {
   circle.forEach((c) => l.push(new UnitCard(c)));
   l.forEach((card) => card.behavior = [new SimpleAimShootBehavior(), new AttackBehavior()]);
   l.forEach((card) => l[l.indexOf(card)].circle.behaviors =
-            [new SimpleAimShootBehavior(), new AttackBehavior()]);
+    [new SimpleAimShootBehavior(), new AttackBehavior()]);
   return l;
 }
 
-var player = new Player(STARTING_UNITS_PLAYER);
-var playerAdds: UnitCard[] = [];
-var enemy = new Player(STARTING_UNITS_ENEMY);
-var enemyAdds: UnitCard[] = [];
-var game = new Game(player, enemy);
-testGameLoop();
+class Main {
+  static testGameLoop(game: Game, ctx: CanvasRenderingContext2D) {
+    if (Game.winCondition(game)) {
+      console.log('game was won')
+      game.reinitialize('win');
+    } else if (Game.loseCondition(game)) {
+      console.log('game was lost')
+      game.reinitialize('loss');
+    }
+    if (game.running) {
+      game.graph.behaviorRun(game);
+      game.graph.bulletRun(game);
+      game.graph.isThenBulletClipping();
+      game.graph.isThenClipping();
+      game.graph.outOfBoundsBulletsRun();
 
-function testGameLoop() {
-  if (game.winCondition()) {
-    console.log('game was won')
-    game.reinitialize('win');
-  } else if (game.loseCondition()) {
-    console.log('game was lost')
-    game.reinitialize('loss');
+      clearScreen();
+      game.graph.drawVertexes();
+      game.graph.drawBullets();
+      game.graph.sumResetDelta();
+      game.graph.updateCollisionBucket();
+
+      game.graph.checkDead();
+
+      game.increment();
+    }
+    requestAnimationFrame(Main.testGameLoop.bind(this, game, ctx));
   }
-  if (game.running) {
-    game.graph.behaviorRun(game);
-    game.graph.bulletRun(game);
-    game.graph.isThenBulletClipping();
-    game.graph.isThenClipping();
-    game.graph.outOfBoundsBulletsRun();
-
-    clearScreen();
-    game.graph.drawVertexes();
-    game.graph.drawBullets();
-    game.graph.sumResetDelta();
-    game.graph.updateCollisionBucket();
-
-    game.graph.checkDead();
-
-    game.increment();
-  } else {
-  }
-  requestAnimationFrame(testGameLoop);
 }
+
+var player: Player = new Player(STARTING_UNITS_PLAYER);
+var enemy: Player = new Player(STARTING_UNITS_ENEMY);
+var game = new Game(player, enemy, GAME_CANVAS, GAME_CTX);
+
+Main.testGameLoop(game, GAME_CTX);

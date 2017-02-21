@@ -6,13 +6,26 @@
   "types": "./lib/main.d.ts",
   "description": "2d graphics incremental game",
   "dependencies": [
-    "typescript@next"
+    "typescript@next",
+    "react",
+    "react-dom"
   ],
-  "devDependencies": {},
+    "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-cli": "^0.1.13",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-react": "^0.10.0",
+    "grunt-webpack": "^1.0.8",
+    "jsx-loader": "^0.12.2",
+    "webpack": "^1.4.13",
+    "webpack-dev-server": "^1.6.6",
+    "@types/react": "^15.0.11",
+    "@types/react-dom": "^0.14.23"
+  },
   "scripts": {
-    "build": "tsc --module commonjs -p lib/",
-    "build:watch": "tsc -p lib/ -w",
-    "build:e2e": "tsc -p e2e/",
+    "build": "tsc --jsx react -p lib/",
+    "build:watch": "tsc --jsx react -p lib/ -w",
+    "build:e2e": "tsc --jsx react -p e2e/",
     "serve": "lite-server -c=bs-config.json",
     "serve:e2e": "lite-server -c=bs-config.e2e.json",
     "prestart": "npm run build",
@@ -27,7 +40,6 @@
     "test:once": "karma start karma.conf.js --single-run",
     "lint": "tslint ./lib/**/*.ts -t verbose"
   },
-
   "repository": {
     "type": "git",
     "url": "git+https://github.com/JustenRickert/papergame.git"

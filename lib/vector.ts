@@ -1,6 +1,6 @@
 // -*- mode:typescript -*-
 
-import { canvas, ctx } from './globaldeclarations'
+import { GAME_CANVAS, GAME_CTX } from './globaldeclarations'
 
 export class Vector {
     constructor(public x: number, public y: number) { }
@@ -91,14 +91,14 @@ export class Shape {
         let backLeft = Vector.plus(backwardPoint, Vector.times(2, Vector.rotate(Math.PI / 2, direction)));
         let backRight = Vector.plus(backwardPoint, Vector.times(2, Vector.rotate(-Math.PI / 2, direction)));
 
-        ctx.beginPath();
-        ctx.moveTo(frontLeft.x, frontLeft.y);
-        ctx.lineTo(frontRight.x, frontRight.y);
-        ctx.lineTo(backLeft.x, backLeft.y);
-        ctx.lineTo(backRight.x, backRight.y);
+        GAME_CTX.beginPath();
+        GAME_CTX.moveTo(frontLeft.x, frontLeft.y);
+        GAME_CTX.lineTo(frontRight.x, frontRight.y);
+        GAME_CTX.lineTo(backLeft.x, backLeft.y);
+        GAME_CTX.lineTo(backRight.x, backRight.y);
 
-        ctx.fill();
-        ctx.closePath();
+        GAME_CTX.fill();
+        GAME_CTX.closePath();
     }
 
     static drawThinTriangle = (position: Vector, direction: Vector): void => {
@@ -110,13 +110,13 @@ export class Shape {
         let backLeft = Vector.plus(backwardPoint, Vector.times(4, Vector.rotate(Math.PI / 2, direction)));
         let backRight = Vector.plus(backwardPoint, Vector.times(4, Vector.rotate(-Math.PI / 2, direction)));
 
-        ctx.beginPath();
-        ctx.moveTo(forwardPoint.x, forwardPoint.y);
-        ctx.lineTo(backLeft.x, backLeft.y);
-        ctx.lineTo(backRight.x, backRight.y);
+        GAME_CTX.beginPath();
+        GAME_CTX.moveTo(forwardPoint.x, forwardPoint.y);
+        GAME_CTX.lineTo(backLeft.x, backLeft.y);
+        GAME_CTX.lineTo(backRight.x, backRight.y);
 
-        ctx.fill();
-        ctx.closePath();
+        GAME_CTX.fill();
+        GAME_CTX.closePath();
     }
 
 

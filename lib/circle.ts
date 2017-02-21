@@ -16,7 +16,7 @@ export class Circle {
   public alive: boolean;
   public timeAlive: number;
   public behaviors: Behavior[]; // add behaviors to this array
-  public wander: Behavior = new WanderCloselyBehavior(); // Default behavior
+  public wander: Behavior; // Default behavior
 
   constructor(
     public id: number,
@@ -25,12 +25,14 @@ export class Circle {
     public dPos: Vector = new Vector(0, 0),
     public vel: Vector = Vector.random(),
     public teamColor: string = 'Black',
+    public dColor: string = 'Black',
     public color: string = 'Black',
     public bandColor: string = 'Black',
     public direction: number = 4 * Math.PI * Math.random() - 2 * Math.PI,
     public speed: number = 2.5,
     public turnRate: number = 0.07
   ) {
+    this.wander = new WanderCloselyBehavior(this.pos);
     this.alive = true;
   }
 
@@ -74,7 +76,7 @@ export class Circle {
   public turnToPosition = (pos: Vector): void => {
     if (Math.abs(Vector.angleBetween(this.vel, Vector.minus(pos, this.pos))) > 0.01) {
       this.turn(this.turnRate * Vector.angularDirectionTo(this.vel,
-                                                          Vector.minus(pos, this.pos)));
+        Vector.minus(pos, this.pos)));
     }
   }
 
@@ -150,7 +152,7 @@ export class Circle {
 
   reinitializeBehaviors = () => {
     for (let b of this.behaviors) {
-      b.reinitialize();
+      b.reinitialize(this.pos);
     }
   }
 

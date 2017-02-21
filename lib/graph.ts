@@ -1,6 +1,6 @@
 // -*-mode:typescript-*-
 
-import { canvas, ctx } from './globaldeclarations'
+import { GAME_CANVAS, GAME_CTX } from './globaldeclarations'
 import { Bullet } from './bullet'
 import { Circle } from './circle'
 import { CollisionBucket } from './collisionbucket'
@@ -42,7 +42,7 @@ export class Graph {
         for (let i in this.vertexes) {
             this.vertexDeltas[i] = nilVector;
         }
-        this.size = { height: canvas.height, width: canvas.width };
+        this.size = { height: GAME_CANVAS.height, width: GAME_CANVAS.width };
         this.collisionBucket = new CollisionBucket(this);
     }
 
@@ -269,31 +269,31 @@ export class Graph {
 
     drawCircle = (circle: Circle): void => {
         // Draw the Circle
-        ctx.beginPath();
-        ctx.arc(circle.pos.x, circle.pos.y, circle.radius, 0, 2 * Math.PI);
-        ctx.closePath();
+        GAME_CTX.beginPath();
+        GAME_CTX.arc(circle.pos.x, circle.pos.y, circle.radius, 0, 2 * Math.PI);
+        GAME_CTX.closePath();
         // color in the circle
-        ctx.fillStyle = circle.color;
-        ctx.fill();
+        GAME_CTX.fillStyle = circle.color;
+        GAME_CTX.fill();
         // Draw the triangle at circle.direction at half radius. I think I'm going
         // to make all projectiles squares. Triangles could be designated as
         // structures.
-        ctx.beginPath();
+        GAME_CTX.beginPath();
         // forward point
-        ctx.moveTo(
+        GAME_CTX.moveTo(
             circle.pos.x + (3 * circle.radius / 4) * Math.sin(circle.direction),
             circle.pos.y + (3 * circle.radius / 4) * Math.cos(circle.direction));
         // point to the left (or right, I dunno and it doesn't matter)
-        ctx.lineTo(
+        GAME_CTX.lineTo(
             circle.pos.x + (2 * circle.radius / 4) * Math.sin(circle.direction + Math.PI / 3),
             circle.pos.y + (2 * circle.radius / 4) * Math.cos(circle.direction + Math.PI / 3));
-        ctx.lineTo(
+        GAME_CTX.lineTo(
             circle.pos.x + (2 * circle.radius / 4) * Math.sin(circle.direction - Math.PI / 3),
             circle.pos.y + (2 * circle.radius / 4) * Math.cos(circle.direction - Math.PI / 3));
         // color it in
-        ctx.fillStyle = circle.bandColor;
-        ctx.fill();
-        ctx.closePath();
+        GAME_CTX.fillStyle = circle.bandColor;
+        GAME_CTX.fill();
+        GAME_CTX.closePath();
     }
 
     drawTest = (sideLength: number, position: Vector, direction: Vector): void =>
