@@ -12,7 +12,7 @@ export class BlueCircle extends Circle {
   public behaviors: Behavior[];
 
   constructor(id: number, ...behaviors: Behavior[]) {
-    super(id, 20, new Vector(200, 300))
+    super(id, 12, new Vector(200, 300))
     this.behaviors = behaviors;
     this.id = id;
     this.teamColor = "blue";
@@ -20,7 +20,7 @@ export class BlueCircle extends Circle {
     this.color = this.dColor;
     this.timeAlive = 0
 
-    this.life.maxHealth = 10;
+    this.life.maxHealth = 12;
     this.life.health = this.life.maxHealth;
   }
 }

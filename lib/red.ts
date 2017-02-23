@@ -22,12 +22,12 @@ export class RedCircle extends Circle {
     this.teamColor = "red";
     this.dColor = "gold";
     this.color = this.dColor;
-    this.timeAlive = 0
+    this.timeAlive = 0;
+    this.radius = 25;
+    this.speed = 1.0;
+    this.turnRate = 0.04;
 
-    this.speed = 1.0,
-    this.turnRate = 0.04
-
-    this.life.maxHealth = 10;
+    this.life.maxHealth = 30;
     this.life.health = this.life.maxHealth;
   }
 }

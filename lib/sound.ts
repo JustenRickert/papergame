@@ -1,7 +1,10 @@
-
-
+/*
+  The problem with JavaScript audio handling is that it by default queues the
+  sounds that are played, instead trying to play the sounds over one another.
+  Using different channels, however, such an obstacle is circumvented.
+ */
 class Channel {
-  static channelMax: number = 5;
+  static channelMax: number = 50;
 
   audioEl: HTMLAudioElement[];
   index: number;
@@ -34,6 +37,11 @@ class SoundClass {
     this.hitBulletSoundChannel = new Channel(this.hitFartSound);
   }
 
+  /*
+    Select the new channel for the sound, then play the sound. There doesn't
+    seem to be a downside to having a lot of sound channels, but regardless the
+    amount of channels can change by changing Channel.channelMax.
+   */
   playShortHighBeep = (): void => {
     this.incrementChannel(this.shortHighBeepChannel);
     this.shortHighBeepChannel.audioEl[this.shortHighBeepChannel.index].play();
@@ -57,4 +65,7 @@ class SoundClass {
   }
 }
 
+// I don't want to have to create a new SoundClass for every sound, so let's
+// just simply export a variable and use that for everything. Otherwise, Useless
+// sound channels would be made and we don't want that.
 export const Sound = new SoundClass();

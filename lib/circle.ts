@@ -16,7 +16,7 @@ export class Circle {
   public alive: boolean;
   public timeAlive: number;
   public behaviors: Behavior[]; // add behaviors to this array
-  public wander: Behavior; // Default behavior
+  // public wander: Behavior; // Default behavior
 
   constructor(
     public id: number,
@@ -32,7 +32,7 @@ export class Circle {
     public speed: number = 2.5,
     public turnRate: number = 0.07
   ) {
-    this.wander = new WanderCloselyBehavior(this.pos);
+    // this.wander = new WanderCloselyBehavior(this.pos);
     this.alive = true;
   }
 
@@ -167,7 +167,7 @@ export class Circle {
       }
     }
     // default behavior
-    this.wander.condition(v, game)
-    this.wander.consequence(v, game);
+    // this.wander.condition(v, game)
+    // this.wander.consequence(v, game);
   }
 }

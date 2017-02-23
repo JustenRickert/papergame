@@ -13,6 +13,8 @@ const shortHighBeep = Sound.playShortHighBeep;
 const hitBulletSound = Sound.playHitBulletSound;
 
 export class Bullet {
+  static speed: number = 4;
+
   pos: Vector;
   vel: Vector;
   color: string;
@@ -77,7 +79,7 @@ export class Bullet {
   static shoot = (
     position: Vector, direction: Vector, color: string, damage: number,
     graph: Graph): void => {
-      graph.bullets.push(new Bullet(position, direction, color, damage));
-      shortHighBeep();
-    }
+    graph.bullets.push(new Bullet(position, Vector.times(Bullet.speed, direction), color, damage));
+    shortHighBeep();
+  }
 }

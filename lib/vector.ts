@@ -118,6 +118,4 @@ export class Shape {
         GAME_CTX.fill();
         GAME_CTX.closePath();
     }
-
-
-}
+} 
