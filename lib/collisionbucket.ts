@@ -41,7 +41,8 @@ export class CollisionBucket {
       this.bucket[i] = nilVertex;
     }
     for (let v of graph.vertexes) {
-      let index = CollisionBucket.gridIndexToCollisionBucketIndex(this.gridIndexOf(v.circle.pos));
+      let index = CollisionBucket
+        .gridIndexToCollisionBucketIndex(this.gridIndexOf(v.circle.pos));
       !this.bucket[index]
         ? this.bucket[index] = [v]
         : this.bucket[index].push(v);

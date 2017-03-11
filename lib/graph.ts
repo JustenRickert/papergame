@@ -1,6 +1,5 @@
 // -*-mode:typescript-*-
 
-import { GAME_CANVAS, GAME_CTX } from './globaldeclarations'
 import { Bullet } from './bullet'
 import { Circle } from './circle'
 import { CollisionBucket } from './collisionbucket'
@@ -8,16 +7,9 @@ import { Game } from './game'
 import { Player } from './player'
 import { Vector, Shape } from './vector'
 
-export interface Edge {
-  parent: Vertex,
-  child: Vertex,
-  dist: number
-}
+export interface Edge { parent: Vertex, child: Vertex, dist: number }
 
-export interface Vertex {
-  circle: Circle,
-  edges: Edge[]
-}
+export interface Vertex { circle: Circle, edges: Edge[] }
 
 export class Graph {
   vertexes: Vertex[];
@@ -32,7 +24,7 @@ export class Graph {
   size: { height: number, width: number };
   collisionBucket: CollisionBucket;
 
-  constructor(player: Player, enemy: Player) {
+  constructor(player: Player, enemy: Player, ctx) {
     let nilVector = new Vector(0, 0);
     this.deadEdges = [];
     this.player = player;
@@ -42,7 +34,7 @@ export class Graph {
     for (let i in this.vertexes) {
       this.vertexDeltas[i] = nilVector;
     }
-    this.size = { height: GAME_CANVAS.height, width: GAME_CANVAS.width };
+    this.size = { height: ctx.height, width: ctx.width };
     this.collisionBucket = new CollisionBucket(this);
   }
 
@@ -85,15 +77,15 @@ export class Graph {
   }
 
   outOfBoundsBulletsRun = (): void => this.bullets.forEach((b) =>
-                                                           b.isThenOutOfBounds(this));
+    b.isThenOutOfBounds(this));
 
   // Sums the delta with current position, then resets the delta.
   sumResetDelta = (): void => {
-    let nilVector = new Vector(0, 0);
+    let nil = new Vector(0, 0);
     for (let i in this.vertexes) {
       this.vertexes[i].circle.pos = Vector.plus(
         this.vertexes[i].circle.pos, this.vertexDeltas[i]);
-      this.vertexDeltas[i] = nilVector;
+      this.vertexDeltas[i] = nil;
     }
     // calculate new edge distances & sort
     for (let i in this.edges) {
@@ -224,8 +216,8 @@ export class Graph {
     // returns that value's division by the vector list's length, thus
     // returning the mean.
     return Vector.times(1 / vertexes.length,
-                        vertexes.reduce(((accumVector, v) =>
-                                         Vector.plus(accumVector, v.circle.pos)), new Vector(0, 0)));
+      vertexes.reduce(((accumVector, v) =>
+        Vector.plus(accumVector, v.circle.pos)), new Vector(0, 0)));
   }
 
   behaviorRun = (game: Game): void =>
@@ -261,39 +253,42 @@ export class Graph {
     return -1
   }
 
-  drawVertexes = (): void => {
-    this.vertexes.concat(this.dead).forEach((v): void => this.drawCircle(v.circle));
+  drawVertexes = (ctx): void => {
+    this.vertexes.concat(this.dead).forEach((v): void => this.drawCircle(v.circle, ctx));
   }
 
-  drawBullets = (): void => this.bullets.forEach((b): void => b.draw());
+  drawBullets = (ctx: CanvasRenderingContext2D): void =>
+    this.bullets.forEach((b): void => b.draw(ctx));
 
-  drawCircle = (circle: Circle): void => {
+  drawCircle = (circle: Circle, ctx: CanvasRenderingContext2D): void => {
     // Draw the Circle
-    GAME_CTX.beginPath();
-    GAME_CTX.arc(circle.pos.x, circle.pos.y, circle.radius, 0, 2 * Math.PI);
-    GAME_CTX.closePath();
+    ctx.beginPath();
+    ctx.arc(circle.pos.x, circle.pos.y, circle.radius, 0, 2 * Math.PI);
+    ctx.closePath();
+
     // color in the circle
-    GAME_CTX.fillStyle = circle.color;
-    GAME_CTX.fill();
+    ctx.fillStyle = circle.color;
+    ctx.fill();
+
     // Draw the triangle at circle.direction at half radius. I think I'm going
     // to make all projectiles squares. Triangles could be designated as
     // structures.
-    GAME_CTX.beginPath();
+    ctx.beginPath();
     // forward point
-    GAME_CTX.moveTo(
+    ctx.moveTo(
       circle.pos.x + (3 * circle.radius / 4) * Math.sin(circle.direction),
       circle.pos.y + (3 * circle.radius / 4) * Math.cos(circle.direction));
     // point to the left (or right, I dunno and it doesn't matter)
-    GAME_CTX.lineTo(
+    ctx.lineTo(
       circle.pos.x + (2 * circle.radius / 4) * Math.sin(circle.direction + Math.PI / 3),
       circle.pos.y + (2 * circle.radius / 4) * Math.cos(circle.direction + Math.PI / 3));
-    GAME_CTX.lineTo(
+    ctx.lineTo(
       circle.pos.x + (2 * circle.radius / 4) * Math.sin(circle.direction - Math.PI / 3),
       circle.pos.y + (2 * circle.radius / 4) * Math.cos(circle.direction - Math.PI / 3));
     // color it in
-    GAME_CTX.fillStyle = circle.bandColor;
-    GAME_CTX.fill();
-    GAME_CTX.closePath();
+    ctx.fillStyle = circle.triangleColor;
+    ctx.fill();
+    ctx.closePath();
   }
 
   drawTest = (sideLength: number, position: Vector, direction: Vector): void =>

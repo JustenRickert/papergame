@@ -28,7 +28,7 @@ export class Game {
     this.ctx = ctx;
     this.canvas = canvas;
     this.circles = player.circles().concat(enemy.circles());
-    this.graph = new Graph(player, enemy);
+    this.graph = new Graph(player, enemy, ctx);
     this.frame = 0;
   }
 
@@ -54,7 +54,7 @@ export class Game {
     this.graph.enemy.circle
       .forEach((c) => c.pos = new Vector(this.canvas.width, this.canvas.height));
     this.graph.reinitializeBehaviors();
-    this.graph = new Graph(this.graph.player, this.graph.enemy);
+    this.graph = new Graph(this.graph.player, this.graph.enemy, this.ctx);
     this.graph.reinitializeBehaviors();
   }
 

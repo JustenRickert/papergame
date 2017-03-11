@@ -71,7 +71,8 @@ export class Bullet {
     this.pos = Vector.plus(this.pos, this.vel);
   }
 
-  draw = (): void => Shape.drawThinTriangle(this.pos, this.vel);
+  draw = (ctx: CanvasRenderingContext2D): void =>
+    Shape.drawThinTriangle(this.pos, this.vel, ctx);
 
   // Takes a position, and a direction, places a bullet on the graph at the
   // position, moving in some vector direction. The bullet is added to the

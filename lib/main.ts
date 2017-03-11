@@ -3,7 +3,7 @@
 // eval: (setq typescript-indent-level 2)
 // End:
 
-import { GAME_CANVAS, GAME_CTX } from './globaldeclarations'
+import { GAME_CANVAS, GAME_CTX, GAME_CANVAS_2, GAME_CTX_2 } from './globaldeclarations'
 import { Bullet } from './bullet'
 import { Vector } from './vector'
 import { Circle } from './circle'
@@ -13,6 +13,7 @@ import { CollisionBucket } from './collisionbucket'
 import { Game } from './game'
 import { Player, UnitCard } from './player'
 import { AttackBehavior, SimpleAimShootBehavior } from './behavior'
+import { EnCircleBehavior, SimpleFollow } from './testbehavior'
 
 /* Okay, so let there be a game board. It is to be shaped according to the
  * number of pieces that will be on the board or something. There will be two
@@ -25,8 +26,8 @@ import { AttackBehavior, SimpleAimShootBehavior } from './behavior'
  * goal is one team winning over the other. */
 
 // clears the screen, obvii
-function clearScreen() {
-  GAME_CTX.clearRect(0, 0, 640, 640);
+function clearCtx(ctx) {
+  ctx.clearRect(0, 0, 640, 640);
   // ctx.width, ctx.height);
 }
 
@@ -50,6 +51,22 @@ const STARTING_UNITS_ENEMY: UnitCard[] = (() => {
   return cardify(circles);
 })();
 
+const TEST_CIRCLE: UnitCard[] = (() => {
+  let circles = [];
+  for (let i of [0]) // RedCircle needs a number id, lol
+    circles.push(new RedCircle(i));
+  circles.forEach((c) => c.pos = new Vector(320, 160));
+  return testCardify(circles);
+})();
+
+const TEST_ENEMY_CIRCLE: UnitCard[] = (() => {
+  let circles = [];
+  for (let i of [0]) // RedCircle needs a number id, lol
+    circles.push(new BlueCircle(i));
+  circles.forEach((c) => c.pos = new Vector(320, 320));
+  return testCardifyEnemy(circles);
+})();
+
 export function cardifyOne(circle: Circle): UnitCard {
   let uc = new UnitCard(circle);
   uc.behavior = [new SimpleAimShootBehavior(), new AttackBehavior()]
@@ -65,7 +82,31 @@ export function cardify(circle: Circle[]): UnitCard[] {
   return l;
 }
 
+export function testCardify(circle: Circle[]): UnitCard[] {
+  let l: UnitCard[] = [];
+  circle.forEach((c) => l.push(new UnitCard(c)));
+  l.forEach((card) => card.behavior = [new EnCircleBehavior(card.circle)]);
+  l.forEach((card) => l[l.indexOf(card)].circle.behaviors =
+    [new EnCircleBehavior(card.circle)]);
+  return l;
+}
+
+export function testCardifyEnemy(circle: Circle[]): UnitCard[] {
+  let l: UnitCard[] = [];
+  circle.forEach((c) => l.push(new UnitCard(c)));
+  l.forEach((card) => card.behavior = [new SimpleFollow(card.circle)]);
+  l.forEach((card) => l[l.indexOf(card)].circle.behaviors =
+    [new SimpleFollow(card.circle)]);
+  return l;
+}
+
+
 class Main {
+  static testLoops(games: Game[], ctxs: CanvasRenderingContext2D[]) {
+    for (let i in games) {
+      Main.testGameLoop(games[i], ctxs[i]);
+    }
+  }
   static testGameLoop(game: Game, ctx: CanvasRenderingContext2D) {
     if (Game.winCondition(game)) {
       console.log('game was won')
@@ -81,9 +122,9 @@ class Main {
       game.graph.isThenClipping();
       game.graph.outOfBoundsBulletsRun();
 
-      clearScreen();
-      game.graph.drawVertexes();
-      game.graph.drawBullets();
+      clearCtx(ctx);
+      game.graph.drawVertexes(ctx);
+      game.graph.drawBullets(ctx);
       game.graph.sumResetDelta();
       game.graph.updateCollisionBucket();
 
@@ -95,8 +136,13 @@ class Main {
   }
 }
 
+var testPlayer: Player = new Player(TEST_CIRCLE);
+var testEnemy: Player = new Player(TEST_ENEMY_CIRCLE);
+var game = new Game(testPlayer, testEnemy, GAME_CANVAS, GAME_CTX);
+
 var player: Player = new Player(STARTING_UNITS_PLAYER);
 var enemy: Player = new Player(STARTING_UNITS_ENEMY);
-var game = new Game(player, enemy, GAME_CANVAS, GAME_CTX);
+var game2 = new Game(player, enemy, GAME_CANVAS_2, GAME_CTX_2);
 
-Main.testGameLoop(game, GAME_CTX);
+Main.testLoops([game, game2], [GAME_CTX, GAME_CTX_2])
+// Main.testGameLoop(game2, GAME_CTX_2);

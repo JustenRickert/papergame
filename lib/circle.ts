@@ -27,8 +27,9 @@ export class Circle {
     public teamColor: string = 'Black',
     public dColor: string = 'Black',
     public color: string = 'Black',
-    public bandColor: string = 'Black',
-    public direction: number = 4 * Math.PI * Math.random() - 2 * Math.PI,
+    public triangleColor: string = 'Black',
+    public direction: number = Math.PI/2,
+      // 4 * Math.PI * Math.random() - 2 * Math.PI,
     public speed: number = 2.5,
     public turnRate: number = 0.07
   ) {

@@ -9,6 +9,10 @@ export const GAME_CANVAS: HTMLCanvasElement
   = <HTMLCanvasElement>document.getElementById("gameCanvas");
 export const GAME_CTX: CanvasRenderingContext2D = GAME_CANVAS.getContext("2d");
 
+export const GAME_CANVAS_2: HTMLCanvasElement
+  = <HTMLCanvasElement>document.getElementById("gameCanvas2");
+export const GAME_CTX_2: CanvasRenderingContext2D = GAME_CANVAS_2.getContext("2d");
+
 export var LASTCLICK = Vector.random();
 GAME_CANVAS.onclick = function updateLastClick(event: MouseEvent) {
   var mPos = getMousePos(GAME_CANVAS, event)
@@ -22,4 +26,3 @@ export var getMousePos = (canvas: HTMLCanvasElement, evt: MouseEvent) => {
     y: evt.clientY - rect.top
   };
 }
-
