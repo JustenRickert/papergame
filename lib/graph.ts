@@ -24,7 +24,7 @@ export class Graph {
   size: { height: number, width: number };
   collisionBucket: CollisionBucket;
 
-  constructor(player: Player, enemy: Player, ctx) {
+  constructor(player: Player, enemy: Player, ctx: CanvasRenderingContext2D) {
     let nilVector = new Vector(0, 0);
     this.deadEdges = [];
     this.player = player;
@@ -34,7 +34,7 @@ export class Graph {
     for (let i in this.vertexes) {
       this.vertexDeltas[i] = nilVector;
     }
-    this.size = { height: ctx.height, width: ctx.width };
+    this.size = { height: Game.size.height, width: Game.size.width };
     this.collisionBucket = new CollisionBucket(this);
   }
 
@@ -253,7 +253,7 @@ export class Graph {
     return -1
   }
 
-  drawVertexes = (ctx): void => {
+  drawVertexes = (ctx: CanvasRenderingContext2D): void => {
     this.vertexes.concat(this.dead).forEach((v): void => this.drawCircle(v.circle, ctx));
   }
 
@@ -291,6 +291,7 @@ export class Graph {
     ctx.closePath();
   }
 
-  drawTest = (sideLength: number, position: Vector, direction: Vector): void =>
-    Shape.drawRect(position, direction);
+  drawTest =
+  (sideLength: number, position: Vector, direction: Vector, ctx: CanvasRenderingContext2D): void =>
+    Shape.drawRect(position, direction, ctx);
 }

@@ -13,7 +13,7 @@ import { CollisionBucket } from './collisionbucket'
 import { Game } from './game'
 import { Player, UnitCard } from './player'
 import { AttackBehavior, SimpleAimShootBehavior } from './behavior'
-import { EnCircleBehavior, SimpleFollow } from './testbehavior'
+import { EnCircleBehavior, SimpleFollowBehavior } from './testbehavior'
 
 /* Okay, so let there be a game board. It is to be shaped according to the
  * number of pieces that will be on the board or something. There will be two
@@ -26,7 +26,7 @@ import { EnCircleBehavior, SimpleFollow } from './testbehavior'
  * goal is one team winning over the other. */
 
 // clears the screen, obvii
-function clearCtx(ctx) {
+function clearCtx(ctx: CanvasRenderingContext2D) {
   ctx.clearRect(0, 0, 640, 640);
   // ctx.width, ctx.height);
 }
@@ -94,9 +94,9 @@ export function testCardify(circle: Circle[]): UnitCard[] {
 export function testCardifyEnemy(circle: Circle[]): UnitCard[] {
   let l: UnitCard[] = [];
   circle.forEach((c) => l.push(new UnitCard(c)));
-  l.forEach((card) => card.behavior = [new SimpleFollow(card.circle)]);
+  l.forEach((card) => card.behavior = [new SimpleFollowBehavior(card.circle)]);
   l.forEach((card) => l[l.indexOf(card)].circle.behaviors =
-    [new SimpleFollow(card.circle)]);
+    [new SimpleFollowBehavior(card.circle)]);
   return l;
 }
 

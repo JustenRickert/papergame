@@ -21,8 +21,8 @@ export class EnCircleBehavior implements Behavior {
   // said in a different, tautological way, omega is the integral of alpha. NOTE
   // HOWEVER THAT THIS ISNT PRECISELY TRUE. There is a correspondence between
   // the limit of something called the Riemann sum and the integral. Since this
-  // is a computer program, there cannot the exact integral, as the integral is
-  // an abstract mathematical idea to reason about computation.
+  // is a computer program, there cannot be the exact integral, as the integral
+  // is an abstract mathematical idea to reason about computation.
 
   // Think of it this way: The circles move at 60 frames per second. At each
   // frame, there is small value, alpha, added to the angle, omega. So, omega =
@@ -43,7 +43,6 @@ export class EnCircleBehavior implements Behavior {
   }
 
   reinitialize = (): void => {
-    // this.bAttack = new BasicAttack(2);
   }
 
   condition = (v: Vertex, game: Game): boolean => {
@@ -68,7 +67,7 @@ export class EnCircleBehavior implements Behavior {
   }
 }
 
-export class SimpleFollow implements Behavior {
+export class SimpleFollowBehavior implements Behavior {
   targetEdge: Edge;
   constructor(c: Circle) {
     c.speed = 1.5;
@@ -94,7 +93,8 @@ export class SimpleFollow implements Behavior {
     // needs only to run across each of the other vertexes on the graph ONCE,
     // which is the best we can do. The second filter then only has to go
     // through the Proper Subset returned from the first filter (i.e. the
-    // smaller set of elements Partitioned from the first filter).
+    // smaller set of elements Partitioned from the first filter), which is
+    // better than the best that we could do from the first filter.
     this.targetEdge = attackV.edges.filter(Graph.isDirty).filter(Graph.isEdgeChildAlive)[0];
     return true
   }

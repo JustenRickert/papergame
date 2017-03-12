@@ -12,6 +12,8 @@ import { Player } from './player'
 import { Vector } from './vector'
 
 export class Game {
+  static size: { height: number, width: number } = { height: 640, width: 640 };
+
   public running: boolean = true;
   public won: boolean = false;
   public lost: boolean = false;
@@ -24,7 +26,8 @@ export class Game {
   public ctx: CanvasRenderingContext2D;
   public circles: Circle[];   // this might not be necessary... uses more ram
 
-  constructor(player: Player, enemy: Player, canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
+  constructor(player: Player, enemy: Player,
+    canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
     this.ctx = ctx;
     this.canvas = canvas;
     this.circles = player.circles().concat(enemy.circles());
