@@ -4,14 +4,14 @@
 // End:
 
 // import { CANVAS, CTX } from './globaldeclarations'
+// import { BasicShoot } from './life'
+// import { Bullet } from './bullet'
+// import { BasicAttack } from './life'
+import { Behavior } from './behavior'
 import { Circle } from './circle'
 import { Vector } from './vector'
-import { BasicShoot } from './life'
-import { Bullet } from './bullet'
 import { Game } from './game'
 import { Vertex, Edge, Graph } from './graph'
-import { BasicAttack } from './life'
-import { Behavior } from './behavior'
 
 
 export class EnCircleBehavior implements Behavior {
@@ -75,6 +75,26 @@ export class SimpleFollow implements Behavior {
   }
   reinitialize = (): void => {}
   condition = (attackV: Vertex, game: Game): boolean => {
+    // First, we filter the dirty edges from the attacking vertexes edge list.
+    // Then, we filter out the edges consisting of only the alive circles. (A
+    // filter is pretty close to the English word filter, in a programming
+    // language a filter is an example of a Mathematical Partition. A
+    // mathematical partition relies upon the Mathematical Laws of Dichotomy,
+    // which dictates that either something belongs or doesn't belong to a set
+    // according to a boolean function. So, either the boolean function returns
+    // TRUE and nothing happens, or the boolean function returns FALSE and the
+    // element is Filtered out.) This filter (or these two filters) returns the
+    // DIRTY edges (i.e. the child and parent have different team colors) with
+    // ALIVE children. Once filtered, the first Edge is simply taken (that is
+    // the `[0]` at the end). Since the list of edges is sorted according
+    // distance from the attacking vertex, this first element is the CLOSEST,
+    // DIRTY, ALIVE Edge (which is exactly what we want).
+
+    // In terms of computational complexity, this is pretty good. The filter
+    // needs only to run across each of the other vertexes on the graph ONCE,
+    // which is the best we can do. The second filter then only has to go
+    // through the Proper Subset returned from the first filter (i.e. the
+    // smaller set of elements Partitioned from the first filter).
     this.targetEdge = attackV.edges.filter(Graph.isDirty).filter(Graph.isEdgeChildAlive)[0];
     return true
   }
